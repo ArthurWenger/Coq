@@ -352,7 +352,7 @@ else
   nil.
 
 Definition voisins_list_row (l:clist region)(row:nat):clist region :=
-(*if is_in_list l r then*)
+if row <? (list_count l)  then
             if andb (0 <? row) (row <? ((list_count l)-1)) then
               get_list_reg l (row-1) :: get_list_reg l row :: get_list_reg l (row+1) :: nil
             else if 0 <? row then
@@ -360,12 +360,13 @@ Definition voisins_list_row (l:clist region)(row:nat):clist region :=
             else if row <? ((list_count l)-1) then
               get_list_reg l row :: get_list_reg l (row+1) :: nil
             else
-              nil.
-(*else
-  nil.*)
+              nil
+else
+  nil.
 
 Eval compute in voisins_list [OO Z, OI Z, II Z, IO Z] (II Z). 
-Eval compute in voisins_list [OO Z, OI Z, II Z, IO Z] (IO Z).             
+Eval compute in voisins_list [OO Z, OI Z, II Z, IO Z] (IO Z).  
+Eval compute in voisins_list_row [OO Z, OI Z, II Z, IO Z] 3.              
 
 
 Fixpoint voisins_mat (m:listlist region)(r:region):clist region :=
