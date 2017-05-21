@@ -14,50 +14,53 @@ Inductive region : Type :=
 | IO : region -> region
 | II : region -> region.
 
-hello
-
 Fixpoint equal_region (n m : region) : bool :=
     match n, m with
     | Z , Z => true
-    | Z , _ => false
     | OO n' , OO m' => equal_region n' m'
-    | OO n' , _ => false
     | OI n' , OI m' => equal_region n' m'
-    | OI n' , _ => false
     | IO n' , IO m' => equal_region n' m'
-    | IO n' , _ => false
     | II n' , II m' => equal_region n' m'
-    | II n' , _ => false
+    | _, _ => false
     end.
 
+(* Notation "x =? y" := (equal_region x y) : region_scope.
+Locate "=?".
+Open Scope region_scope.
+Eval compute in (OO Z) =? (OO Z). *)
 
 Section customlist.
-Variable A:Type.
-Inductive clist : Type :=
-  | nil : clist
-  | cons : A -> clist -> clist.
+(* Variable A:Type. *)
+Inductive clist (A:Type): Type :=
+  | nil : clist A
+  | cons : A -> clist A -> clist A.
 
-Fixpoint list_count (l:clist) : nat := 
+Implicit Arguments nil [A].
+Implicit Arguments cons [A].
+
+Fixpoint list_count {A:Type} (l:clist A) : nat := 
   match l with
   | nil => 0
   | cons n l' =>  1 + list_count l'
   end.
 
-Fixpoint concat_list (l1 l2:clist): clist :=
+Fixpoint concat_list {A:Type}(l1 l2:clist A): clist A :=
 match l1 with
 | nil => l2
 | cons n l' => cons n (concat_list l' l2)
 end.
 
-Fixpoint get_list_elm (l:clist)(n:nat)(zero:A): A :=
+Fixpoint get_list_elm {A:Type}(l:clist A)(n:nat)(zero:A): A :=
   match l with
   | nil => zero
   | cons x l' => if (0 <? n) then 
                       get_list_elm l' (n-1) zero
                  else x
   end.
+
 End customlist.
 Implicit Arguments nil [A].
+Implicit Arguments cons [A].
 
 Notation "x :: l" := (cons x l) (at level 60, right associativity).
 Notation "[ ]" := nil.
@@ -103,19 +106,40 @@ Definition get_list_reg (l:clist region)(n:nat): region := get_list_elm l n Z.
 Eval compute in get_list_reg [OO Z,IO Z,II Z] 2.
 Eval compute in get_row_region [OO Z, IO Z, II Z] (II Z).
 
-Section listlist.
-Variable A:Type.
-Inductive listlist : Type :=
-  | lnil : listlist
-  | lcons : clist A -> listlist -> listlist.
+Fixpoint equal_list_region (l1 l2:clist region): bool :=
+match l1, l2 with 
+| nil, nil => true
+| cons x1 l1', cons x2 l2' => if(equal_region x1 x2) then equal_list_region l1' l2' else false
+| _, _ => false
+end.
 
-Fixpoint conc_mat_horizontal (l1 l2:listlist): listlist :=
+Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z].
+Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z, II Z].
+Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z].
+
+Section listlist.
+(* Variable A:Type. *)
+Inductive listlist (A:Type) : Type :=
+  | lnil : listlist A
+  | lcons : clist A -> listlist A -> listlist A.
+
+Implicit Arguments lnil [A].
+Implicit Arguments lcons [A].
+
+(* nombre de colonnes dans une matrice *)
+Fixpoint mat_count {A:Type}(m:listlist A): nat :=
+match m with
+| lnil => 0
+| lcons l m' => 1 + mat_count m'
+end.
+
+Fixpoint conc_mat_horizontal {A:Type}(l1 l2:listlist A): listlist A :=
 match l1 with
 | lnil => l2
 | lcons v l' => lcons v (conc_mat_horizontal l' l2)
 end.
 
-Fixpoint conc_mat_vertical (l1 l2:listlist): listlist :=
+Fixpoint conc_mat_vertical {A:Type}(l1 l2:listlist A): listlist A :=
 match l1 with
 | lnil => l2
 | lcons v1 l1' => match l2 with
@@ -125,13 +149,13 @@ match l1 with
 end.
 
 (* Permet de vérifier qu'une liste de liste est une matrice *)
-Definition is_matrix(m:listlist) : bool :=
+Definition is_matrix {A:Type}(m:listlist A) : bool :=
   let compare_first_list_count := 
-  (fix sub (m:listlist)(n:nat) : bool := 
+  (fix sub (m:listlist A)(first_list_count:nat) : bool := 
     match m with
     | lnil => true
-    | lcons l' m' => if Nat.eqb n (list_count l') then
-                        sub m' n
+    | lcons l' m' => if Nat.eqb first_list_count (list_count l') then
+                        sub m' first_list_count
                     else
                         false
     end) in
@@ -140,29 +164,32 @@ Definition is_matrix(m:listlist) : bool :=
   | lcons l' m' => compare_first_list_count m' (list_count l')
   end.
 
-(* Potentiellement remplacer les fonctions imbriquées par une fonction generale *)
-Definition is_square_matrix(m:listlist) : bool :=
+  Definition is_square_matrix {A:Type}(m:listlist A) : bool :=
+  match m with
+  | lnil => true
+  | lcons l' m' => andb (is_matrix m) (list_count l' =? mat_count m)
+  end. 
+
+(* OLD
+Definition is_square_matrix_bis {A:Type}(m:listlist A) : bool :=
 let compare_listElm_and_col := 
-  (fix sub (m:listlist)(n:nat)(acc:nat) : bool := 
+  (fix sub (m:listlist A)(first_list_count:nat)(acc:nat) : bool := 
     match m with
-    | lnil => if Nat.eqb n acc then
+    | lnil => if Nat.eqb first_list_count acc then
                 true
               else
                 false
-    | lcons l' m' => if andb (Nat.eqb n (list_count l')) (acc <? n)  then
-                        sub m' n (acc+1)
+    | lcons l' m' => if andb (Nat.eqb first_list_count (list_count l')) (acc <? first_list_count)  then
+                        sub m' first_list_count (acc+1)
                     else
                         false
     end) in
   match m with
   | lnil => true
-  | lcons l' m' => if Nat.eqb (list_count l') 0 then
-                      true
-                   else
-                      compare_listElm_and_col m' (list_count l') 1
-  end.
+  | lcons l' m' => compare_listElm_and_col m' (list_count l') 1
+  end.  *)
 
-Fixpoint get_col (m:listlist)(n:nat): clist A :=
+Fixpoint get_col {A:Type}(m:listlist A)(n:nat): clist A :=
   match m with
   | lnil => nil
   | lcons l' m' => if (0 <? n) then 
@@ -170,20 +197,14 @@ Fixpoint get_col (m:listlist)(n:nat): clist A :=
                    else l'
   end.
 
-Fixpoint get_mat_elm (m:listlist)(row:nat)(col:nat)(zero:A): A :=
+Fixpoint get_mat_elm {A:Type}(m:listlist A)(row:nat)(col:nat)(zero:A): A :=
   let target_col := get_col m col in
   get_list_elm target_col row zero.
-
-(* nombre de colonnes dans une matrice *)
-Fixpoint mat_count (m:listlist): nat :=
-match m with
-| lnil => 0
-| lcons l m' => 1 + mat_count m'
-end.
 
 End listlist.
 
 Implicit Arguments lnil [A].
+Implicit Arguments lcons [A].
 
 Fixpoint get_mat_reg (m:listlist region)(row:nat)(col:nat): region :=
   get_mat_elm m row col Z.
@@ -225,10 +246,10 @@ Eval compute in is_in_mat {[OO Z,OI Z],[IO Z,IO Z]} (OI Z).
 Eval compute in {[0,1],[3,4]}.
 Eval compute in {[OO Z,OI Z],[II Z]}.
 (* Probleme d'homogeneité des listlist *)
-Eval compute in get_col {[0,1],[3,4]} 2.
-Eval compute in get_col {[OO Z],[II Z],[OO Z,OI Z]} 3.
+Eval compute in get_col {[0,1],[3,4]} 1.
+Eval compute in get_col {[OO Z],[II Z],[OO Z,OI Z]} 2.
 
-Eval compute in get_mat_reg {[OO Z, OI Z],[IO Z, II Z],[OO Z,OI Z]} 2 3.
+Eval compute in get_mat_reg {[OO Z, OI Z],[IO Z, II Z],[OO Z,OI Z]} 1 2.
 
 Eval compute in conc_mat_horizontal {[OO Z,OI Z],[II Z]} {[IO Z]}.
 Eval compute in conc_mat_vertical {[OO Z,OI Z],[II Z]} {[IO Z],[II Z]}.
@@ -261,6 +282,18 @@ Fixpoint concat_region(p:region)(s:region):region :=
   | IO p' => IO(concat_region p' s)
   | II p' => II(concat_region p' s)
   end.
+
+
+(* Essayer de généraliser la construction des fonctions de même structure mais de type different, ie: equal_list et equal_listlist par exemple. 
+   Trouver un moyen d'exprimer les cas du match en général. *)
+Fixpoint equal_listlist_region (m1 m2:listlist region): bool :=
+match m1, m2 with 
+| lnil, lnil => true
+| lcons l1 m1', lcons l2 m2' => if(equal_list_region l1 l2) then equal_listlist_region m1' m2' else false
+| _, _ => false
+end.
+
+Eval compute in equal_listlist_region {[OO Z, IO Z], [II Z, OI Z]} {[OO Z, IO Z], [IO Z, OI Z]}.
 
 Fixpoint prefix_list(r: region)(l:clist region): clist region :=
 match l with
@@ -336,8 +369,25 @@ match n with
 | S n' => sub n' (acc+1) (parse_mat m acc) 
 end) in 
 sub n 0 m.
+
 Eval compute in mat_partition 1 {[OO Z]}. 
 Eval compute in mat_partition 2 {[OO Z]}.
+
+(* Implementation de l'algo du poly. Probleme à détailler. *)
+Definition mat_partition_poly (n:nat)(m:listlist region):listlist region :=
+  let sub := (fix sub(n acc:nat)(m:listlist region):listlist region :=
+    match n with
+    | O => m
+    | S n' => let upright := (prefix_listlist ((rot_nat (acc+3)) Z) m) in (
+              let upleft := (prefix_listlist ((rot_nat (acc)) Z) m) in (
+              let downright := (prefix_listlist ((rot_nat (acc+2)) Z) m) in(
+              let downleft := (prefix_listlist ((rot_nat (acc+1)) Z) m) in (
+                sub (n') (acc+1) (conc_mat_vertical (conc_mat_horizontal upleft upright) (conc_mat_horizontal downleft downright))
+              ) ) ) )
+    end ) 
+    in sub n 0 m.
+
+Eval compute in mat_partition_poly 2 {[OO Z]}.
 
 Definition voisins_list (l:clist region)(r:region):clist region :=
 if is_in_list l r then
@@ -352,6 +402,7 @@ if is_in_list l r then
               nil )
 else
   nil.
+
 
 Definition voisins_list_row (l:clist region)(row:nat):clist region :=
 if row <? (list_count l)  then
@@ -386,3 +437,74 @@ if is_in_mat m r then
 else nil.
 
 Eval compute in voisins_mat {[OO Z, II Z, OO Z],[II Z, OI Z, OO Z], [II Z, OO Z, II Z]} (OI Z).
+
+
+
+(* TODO: Preuve que le partionnement est une matrice carré si on commence par OO Z ou n'importe qu'elle region de rang 1 *)
+(* TODO: Preuve que base_matrix est une matrice carré pour tout entier n *)
+
+(* Preuve de l'auto-similarité de la disposition des numéros : toutes les quatre itérations du processus
+de partitionnement, on obtient la même disposition des numéros pour les regions élementaires. *)
+
+Lemma plus_comm : forall n m : nat,
+  n + m = m + n.
+Proof.
+  intros n m. induction n as [| n'].
+  simpl. rewrite -> plus_0_r. reflexivity.
+  simpl. rewrite -> IHn'. rewrite -> plus_n_Sm. reflexivity.
+Qed.
+
+Lemma plus_assoc : forall n m p : nat,
+  n + (m + p) = (n + m) + p.
+Proof.
+  intros n m p. induction n as [| n'].
+  reflexivity.
+  simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Lemma mod_exhaustive: forall n m : nat, m <> 0 -> ((n + m) mod m) = (n mod m).
+intros.
+rewrite Nat.add_mod.
+rewrite Nat.mod_same.
+rewrite plus_0_r.
+rewrite Nat.mod_mod.
+reflexivity.
+assumption.
+assumption.
+assumption.
+Qed.
+
+Theorem rot_nat_mod_4 (n:nat): rot_nat (4+n) = rot_nat n.
+Proof. 
+  unfold rot_nat. 
+  rewrite plus_comm. 
+  rewrite mod_exhaustive. 
+  reflexivity. 
+  discriminate. 
+Qed.
+
+Theorem base_matrix_mod_4 (n:nat): get_base_matrix n = get_base_matrix (n+4).
+Proof. 
+  unfold get_base_matrix. 
+  simpl. 
+  rewrite <- (plus_comm 4). 
+  rewrite <- ?plus_assoc. 
+  rewrite ?rot_nat_mod_4. 
+  reflexivity.
+Qed.
+(* TODO: Montrer qu'une partition est formée à partir de base_matrix ? evident ? *)
+
+
+(*
+Theorem base_matrix_is_square (n:nat): is_square_matrix (get_base_matrix n) = true.
+Proof.
+  unfold is_square_matrix. 
+
+
+Theorem partition_is_square (n:nat)(m:listlist region): is_square_matrix m = true -> is_square_matrix (mat_partition n m) = true .
+Proof.
+   unfold is_square_matrix. 
+Qed.
+*)
+
+

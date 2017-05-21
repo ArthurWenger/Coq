@@ -90,16 +90,13 @@ Eval compute in same_rank (II(OI(OO Z))) (OO(II(II Z))).
 Fixpoint equal_region (n m : region) : bool :=
     match n, m with
     | Z , Z => true
-    | Z , _ => false
     | OO n' , OO m' => equal_region n' m'
-    | OO n' , _ => false
     | OI n' , OI m' => equal_region n' m'
-    | OI n' , _ => false
     | IO n' , IO m' => equal_region n' m'
-    | IO n' , _ => false
     | II n' , II m' => equal_region n' m'
-    | II n' , _ => false
+    | _, _ => false
     end.
+(* Notation "x =? y" := (equal_region x y) : region_scope.*)
 
 Eval compute in equal_region (II(OI(OO Z))) (OO(II(II Z))).
 Eval compute in equal_region (II(OI(OO Z))) (II(OI(OO Z))).
