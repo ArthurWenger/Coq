@@ -14,6 +14,8 @@ Inductive region : Type :=
 | IO : region -> region
 | II : region -> region.
 
+hello
+
 Fixpoint equal_region (n m : region) : bool :=
     match n, m with
     | Z , Z => true
