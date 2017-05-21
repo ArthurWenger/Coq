@@ -462,7 +462,8 @@ Proof.
   simpl. rewrite -> IHn'. reflexivity.
 Qed.
 
-Lemma mod_exhaustive: forall n m : nat, m <> 0 -> ((n + m) mod m) = (n mod m).
+Lemma mod_exhaustive (n m:nat): 
+m <> 0 -> ((n + m) mod m) = (n mod m).
 intros.
 rewrite Nat.add_mod.
 rewrite Nat.mod_same.
@@ -474,7 +475,8 @@ assumption.
 assumption.
 Qed.
 
-Theorem rot_nat_mod_4 (n:nat): rot_nat (4+n) = rot_nat n.
+Theorem rot_nat_mod_4 (n:nat): 
+rot_nat (4+n) = rot_nat n.
 Proof. 
   unfold rot_nat. 
   rewrite plus_comm. 
@@ -483,7 +485,8 @@ Proof.
   discriminate. 
 Qed.
 
-Theorem base_matrix_mod_4 (n:nat): get_base_matrix n = get_base_matrix (n+4).
+Theorem base_matrix_mod_4 (n:nat): 
+get_base_matrix n = get_base_matrix (n+4).
 Proof. 
   unfold get_base_matrix. 
   simpl. 
@@ -494,6 +497,49 @@ Proof.
 Qed.
 (* TODO: Montrer qu'une partition est formée à partir de base_matrix ? evident ? *)
 
+
+Theorem conc_horizontal_count {A:Type}(m1 m2:listlist A): 
+mat_count (conc_mat_horizontal m1 m2) = mat_count m1 + mat_count m2 .
+Proof. 
+  induction m1.
+  reflexivity.
+  simpl. 
+  rewrite IHm1. 
+  reflexivity.
+Qed.
+
+
+Theorem concat_list_count {A:Type}(l1 l2:clist A): 
+list_count (concat_list l1 l2) = list_count l1 + list_count l2 .
+Proof. 
+  induction l1.
+  reflexivity.
+  simpl. 
+  rewrite IHl1. 
+  reflexivity.
+Qed.
+
+Theorem get_col_lcons {A:Type}(m:listlist A)(l:clist A)(col:nat): 
+0 < col -> get_col (lcons l m) col = get_col m (col-1) .
+Proof.
+  intro H. rewrite <- Nat.ltb_lt in H.
+  destruct l. 
+    simpl. destruct (0 <? col). reflexivity. 
+    discriminate.
+    simpl. destruct (0 <? col). reflexivity.
+    discriminate.
+Qed.
+
+
+(* Theorem conc_vertical_count {A:Type}(m1 m2:listlist A)(col:nat): 
+list_count (get_col (conc_mat_vertical m1 m2) col) = list_count (get_col m1 col) + list_count (get_col m2 col).
+Proof. 
+  induction m1.
+  reflexivity.
+  simpl. 
+  rewrite IHm1. 
+  reflexivity.
+Qed. *)
 
 (*
 Theorem base_matrix_is_square (n:nat): is_square_matrix (get_base_matrix n) = true.
