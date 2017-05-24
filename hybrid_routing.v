@@ -140,20 +140,17 @@ Definition reverse (r : region) : region :=
 
 Eval compute in reverse (II(OI(OO Z))).
 
-Fixpoint shared_region (n m : region) : region :=   
-    let rev_n := reverse n in(
-    let rev_m := reverse m in(
-        (fix _shared_region (n m res: region) : region :=
-            match n, m with
-            | OO n' , OO m' => _shared_region n' m' (OO(res))
-            | OI n' , OI m' => _shared_region n' m' (OI(res))
-            | IO n' , IO m' => _shared_region n' m' (IO(res))
-            | II n' , II m' => _shared_region n' m' (II(res))
-            | _, _  => res
-            end ) rev_n rev_m Z
-    )).
+Definition shared_region (n m : region) : region :=   
+    (fix _shared_region (n m res: region) : region :=
+        match n, m with
+        | OO n' , OO m' => _shared_region n' m' (OO(res))
+        | OI n' , OI m' => _shared_region n' m' (OI(res))
+        | IO n' , IO m' => _shared_region n' m' (IO(res))
+        | II n' , II m' => _shared_region n' m' (II(res))
+        | _, _  => res
+        end ) (reverse n) (reverse m) Z.
 
-Eval compute in shared_region (IO(OI(OO Z))) (II(OI(OO Z))) .
+Eval compute in shared_region (IO(OI(OO Z))) (II(OI(II Z))) .
 
 (* regions disjointes *)
 Fixpoint has_shared_region (n m : region) : bool :=
@@ -163,7 +160,7 @@ Fixpoint has_shared_region (n m : region) : bool :=
     end.
 
 Eval compute in has_shared_region (II(OI(II Z))) (II(OI(OO Z))) .
-Eval compute in has_shared_region (IO(OI(II Z))) (II(OI(OO Z))) .
+Eval compute in has_shared_region (IO(OI(II Z))) (II(II(II Z))) .
 
 (* Hiérarchie des régions*)
 Inductive treeRegion :=
