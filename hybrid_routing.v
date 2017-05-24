@@ -127,20 +127,33 @@ Fixpoint last_region (n : region) : region :=
 Eval compute in last_region (II(OI(OO Z))).
 
 (* region en commun <=> relation d'inclusion entre les régions *)
-Fixpoint shared_region (n m : region) : region :=
-    match n, m with
-    | Z , _ => Z
-    | OO n' , OO m' => OO (shared_region n' m')
-    | OO n' , _ => Z
-    | OI n' , OI m' => OI (shared_region n' m')
-    | OI n' , _ => Z
-    | IO n' , IO m' => IO (shared_region n' m')
-    | IO n' , _ => Z
-    | II n' , II m' => II (shared_region n' m')
-    | II n' , _ => Z
-    end.
 
-Eval compute in shared_region (II(OI(II Z))) (II(OI(OO Z))) .
+Definition reverse (r : region) : region :=
+    (fix _reverse (rem res:region): region :=
+        match rem with 
+        | Z => res
+        | OO rem' => _reverse rem' (OO(res))
+        | OI rem' => _reverse rem' (OI(res))
+        | IO rem' => _reverse rem' (IO(res))
+        | II rem' => _reverse rem' (II(res))
+        end ) r Z.
+
+Eval compute in reverse (II(OI(OO Z))).
+
+Fixpoint shared_region (n m : region) : region :=   
+    let rev_n := reverse n in(
+    let rev_m := reverse m in(
+        (fix _shared_region (n m res: region) : region :=
+            match n, m with
+            | OO n' , OO m' => _shared_region n' m' (OO(res))
+            | OI n' , OI m' => _shared_region n' m' (OI(res))
+            | IO n' , IO m' => _shared_region n' m' (IO(res))
+            | II n' , II m' => _shared_region n' m' (II(res))
+            | _, _  => res
+            end ) rev_n rev_m Z
+    )).
+
+Eval compute in shared_region (IO(OI(OO Z))) (II(OI(OO Z))) .
 
 (* regions disjointes *)
 Fixpoint has_shared_region (n m : region) : bool :=
