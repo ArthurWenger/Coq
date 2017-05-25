@@ -41,19 +41,19 @@ Fixpoint concat_region(p:region)(s:region):region :=
 (* Permet d'éliminer les paramètres par défaut dans les définitions sur des types polymorphes.
    Par exemple si un élement n'est pas dans une liste de region on pourra renvoyer None plutot qu'une valeur par défaut comme Z.
    Voir [natoption] pour plus d'infos. *)
-Inductive options {A:Type}: Type :=
-  | Some : A -> options
-  | None : options. 
+Inductive option {A:Type}: Type :=
+  | Some : A -> option
+  | None : option. 
 
-(* Permet d'additioner des options de type nat sans passer par des fonctions auxiliaires. *)
-Definition add_opt (a b:@options nat):@options nat :=
+(* Permet d'additioner des option de type nat sans passer par des fonctions auxiliaires. *)
+Definition add_opt (a b:@option nat):@option nat :=
 match a, b with
 | Some a', Some b' => Some (a'+b')
 | _, _ => None
 end.
-(* Permet d'extraire l'élement d'un type [options] et de renvoyer 
+(* Permet d'extraire l'élement d'un type [option] et de renvoyer 
    une valeur par défaut fournie en argument dans le cas [None]. *)
-Definition option_elim {A:Type} (d: A) (o: options): A :=
+Definition option_elim {A:Type} (d: A) (o: option): A :=
   match o with
   | Some n' => n'
   | None => d
@@ -91,7 +91,7 @@ end.
 (* Permet de récuperer l'élement d'une liste l à la position n.
    On renvoie [None] lorsque la liste est trop courte et [Some x] 
    lorsqu'elle est assez longue et contient x. *)
-Fixpoint get_list_elm {A:Type}(l:clist A)(n:nat): options :=
+Fixpoint get_list_elm {A:Type}(l:clist A)(n:nat): option :=
   match l, n with
   | nil, _ => None
   | cons x l', 0 => Some x
@@ -121,7 +121,7 @@ match l with
 end.
 
 (* Permet de récupérer la position d'une region dans une liste de regions. *)
-Fixpoint get_row_region (l:clist region)(x:region): options :=
+Fixpoint get_row_region (l:clist region)(x:region): option :=
 match l with
 | nil => None (* x n'est pas dans l *)
 | cons n l' => if equal_region x n then
@@ -145,7 +145,7 @@ Eval compute in get_list_elm [1,2,3] 1.
 Eval compute in is_in_list [OO Z,OI Z,IO Z] (II Z).  
 Eval compute in is_in_list [OO Z,OI Z,IO Z] (IO Z). 
 
-(* Permet d'alléger le code lorsqu'on récupère des region à partir d'options *)
+(* Permet d'alléger le code lorsqu'on récupère des region à partir d'option *)
 Definition get_list_reg (l:clist region)(n:nat): region := option_elim Z (get_list_elm l n). 
 
 Eval compute in get_list_reg [OO Z,IO Z,II Z] 2.
@@ -266,7 +266,7 @@ Fixpoint get_col {A:Type}(m:listlist A)(n:nat): clist A :=
   end.
 
 (* Permet de récupérer un élément situé à la ligne row et la colonne nat d'une [listlist] *)
-Fixpoint get_mat_elm {A:Type}(m:listlist A)(row:nat)(col:nat): options :=
+Fixpoint get_mat_elm {A:Type}(m:listlist A)(row:nat)(col:nat): option :=
   get_list_elm (get_col m col) row.
 End listlist.
 
@@ -301,16 +301,19 @@ Fixpoint is_in_mat (m:listlist region)(x:region): bool :=
    jamais de doublons de region. 
    Donc get_col_region est unique pour un x dans une partition. 
    Potentiellement prouver que toute region est unique dans le plan. *)
-Fixpoint get_col_region (m:listlist region)(x:region): options :=
+Fixpoint get_col_region (m:listlist region)(r:region): option :=
   match m with
-  | lnil => None (* x n'est pas dans m *)
-  | lcons l m' => if is_in_list l x then
+  | lnil => None (* r n'est pas dans m *)
+  | lcons l m' => if is_in_list l r then
                     Some 0
                   else
-                    add_opt (Some 1) (get_col_region m' x)
+                    add_opt (Some 1) (get_col_region m' r)
   end.
 
- Eval compute in get_col_region {[OO Z,OI Z],[IO Z,IO Z]} (OI Z).
+Fixpoint get_col_row_region(m:listlist region)(r:region): option * option := 
+let col := get_col_region m r in ((col, get_row_region (get_col m (option_elim 0 col)) r)).
+
+ Eval compute in get_col_region {[OO Z,OI Z],[IO Z,IO Z]} (IO Z).
 
 Eval compute in is_in_mat {[OO Z,OI Z],[IO Z,IO Z]} (II Z).
 Eval compute in is_in_mat {[OO Z,OI Z],[IO Z,IO Z]} (OI Z).
@@ -546,6 +549,31 @@ else nil.
   *)
 
 Eval compute in voisins_mat {[OO Z, II Z, OO Z],[II Z, OI Z, OO Z], [II Z, OO Z, II Z]} (OI Z).
+
+
+Definition diff (n m:nat): nat :=
+if (n<?m) then m-n
+else n-m.
+
+Eval compute in diff 2 5.
+
+(* Calcul du nombre de regions élementaires maximum qui séparent 2 régions appartenant à la matrice des régions.
+   Ce maximum est calculé selon l'axe vertical et l'axe horizontal de la matrice.
+   L'interêt de cette fonction est de calculer la largeur minimum du carré contenant 2 régions du plan.
+   La largeur de ce carré permettra de déterminer si une region r1 est dans A0 par rapport à une autre region r2. *)
+Fixpoint distance_regions_elem (r1 r2:region)(m: listlist region): option :=
+  let (col1, row1) := get_col_row_region m r1 in (
+  let (col2, row2) := get_col_row_region m r2 in (
+    match col1, col2, row1, row2 with
+    | Some c1, Some c2, Some r1, Some r2 => Some (Nat.max (diff c1 c2) (diff r1 r2))
+    | _, _, _, _ => None 
+    end
+  )).
+
+Eval compute in (mat_partition 2 {[OO Z]}).
+Eval compute in distance_regions_elem (OO(OO(OI Z))) (OO(OI(IO Z))) (mat_partition 2 {[OO Z]}).
+
+(* ############# Preuves diverses ############### *)
 
 Lemma plus_comm : forall n m : nat,
   n + m = m + n.
