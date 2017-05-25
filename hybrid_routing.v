@@ -56,36 +56,36 @@ Fixpoint rank (n:region) : nat :=
 Eval compute in rank (II (OI Z)).
 
 (* permet d'obtenir les regions de niveau n contenant une region r <=> An *)
-Fixpoint region_at_rank (r:region) (n:nat) : region :=
-    if Nat.eqb (rank r) n || Nat.eqb (rank r) 1 then
-        r
-    else
-        match r with 
-            | Z => Z
-            | OO r' | OI r' | IO r' | II r' => region_at_rank r' n 
-        end.
+Definition region_at_rank (r:region) (n:nat) : region :=
+    (fix _region_at_rank (r:region) (n:nat) :=
+    match n with
+    | O => r
+    | S n' => match r with
+              | Z => Z
+              | OO r' | OI r' | IO r' | II r' => _region_at_rank r' n'
+              end
+    end
+    ) r ((rank r) - n).
 
-Eval compute in region_at_rank (OO (II (OI Z))) 2.
+Eval compute in region_at_rank (OO (II (OI (II (OO Z))))) 0.
 
-Fixpoint beq_nat (n m : nat) : bool :=
-  match n with
-  | O => match m with
-         | O => true
-         | S m' => false
-         end
-  | S n' => match m with
-            | O => false
-            | S m' => beq_nat n' m'
-            end
-  end.
+Theorem region_at_rank_0 (r:region): region_at_rank r 0 = Z.
+Proof.
+    unfold region_at_rank. rewrite Nat.sub_0_r.
+    induction r; simpl; try exact IHr. 
+    reflexivity.
+Qed.
 
-Notation "x == y" := (beq_nat x y) (at level 40, left associativity) : nat_scope.
+Theorem region_at_rank_idem (r:region): region_at_rank r (rank r) = r.
+Proof.
+    unfold region_at_rank. rewrite minus_diag.
+    destruct r; reflexivity.
+Qed. 
 
 Fixpoint same_rank (n1 n2 : region) : bool :=
-    rank (n1) == rank (n2).
+    rank (n1) =? rank (n2).
 
 Eval compute in same_rank (II(OI(OO Z))) (OO(II(II Z))).
-
 
 Fixpoint equal_region (n m : region) : bool :=
     match n, m with
@@ -101,21 +101,11 @@ Fixpoint equal_region (n m : region) : bool :=
 Eval compute in equal_region (II(OI(OO Z))) (OO(II(II Z))).
 Eval compute in equal_region (II(OI(OO Z))) (II(OI(OO Z))).
 
-Fixpoint first_region (n : region) : region :=
-    match rank n with
-    | 1 => n
-    | _ => match n with 
-           | Z => Z
-           | OO n' => first_region n'
-           | OI n' => first_region n'
-           | IO n' => first_region n'
-           | II n' => first_region n'
-           end
-    end.
+Fixpoint first_region (r : region) : region := region_at_rank r 1.
 
 Eval compute in first_region (II(OI(OO Z))).
 
-Fixpoint last_region (n : region) : region :=
+Fixpoint last_region_elem (n : region) : region :=
     match n with 
     | Z => Z
     | OO n' => OO Z
@@ -124,9 +114,7 @@ Fixpoint last_region (n : region) : region :=
     | II n' => II Z
     end.
 
-Eval compute in last_region (II(OI(OO Z))).
-
-(* region en commun <=> relation d'inclusion entre les régions *)
+Eval compute in last_region_elem (II(OI(OO Z))).
 
 Definition reverse (r : region) : region :=
     (fix _reverse (rem res:region): region :=
@@ -140,6 +128,7 @@ Definition reverse (r : region) : region :=
 
 Eval compute in reverse (II(OI(OO Z))).
 
+(* region en commun <=> relation d'inclusion entre les régions *)
 Definition shared_region (n m : region) : region :=   
     (fix _shared_region (n m res: region) : region :=
         match n, m with
@@ -150,7 +139,7 @@ Definition shared_region (n m : region) : region :=
         | _, _  => res
         end ) (reverse n) (reverse m) Z.
 
-Eval compute in shared_region (IO(OI(OO Z))) (II(OI(II Z))) .
+Eval compute in shared_region (IO(OI(OO Z))) (II(OI(OO Z))) .
 
 (* regions disjointes *)
 Fixpoint has_shared_region (n m : region) : bool :=
