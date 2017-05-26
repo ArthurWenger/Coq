@@ -13,7 +13,7 @@ Les matrices de régions permettent de représenter le partitionnement du plan d
 
 * __treeRegion.v__ : Une représentation de la hiérarchie des régions (inutilisée dans le le reste du projet).
 
-* __partition_plan.v__ : Une modélisation d'un algorithme de partionnement du réseau sous la forme de matrices de regions.
+* __partition_plan.v__ : Une modélisation d'un algorithme de partitionnement du réseau sous la forme de matrices de regions.
 
 * __network.v__ : La modélisation du réseau et des propriétés à démontrer.
 
