@@ -1,6 +1,3 @@
-(* lundi 5/06 9h: rendre code + rapport/presentation orale latex (10-15 pages rapport + 15 pages presentation)
-style pour les transparent latex: beamer (preparer une quinzaine de transparents)
-soutenance le 5 6 ou 7 juin l'aprem *)
 Require Import Arith.
 Require Import Arith Omega.
 Require Import NAxioms NSub NZDiv.
