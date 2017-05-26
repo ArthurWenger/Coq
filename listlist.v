@@ -119,8 +119,8 @@ Eval compute in mylistlist.
 Definition mylistlist2 := lcons [OO Z,OI Z] (lcons [II Z,IO Z] lnil ).
 Eval compute in mylistlist2.
 
-Notation "{ }" := lnil.
-Notation "{ x , .. , y }" := (lcons x .. (lcons y lnil) ..).
+Notation "'{ }" := lnil : type_scope.
+Notation "'{ x , .. , y }" := (lcons x .. (lcons y lnil) ..) : type_scope.
 
 (* Permet de vérifier qu'une région est dans une matrice. *)
 Fixpoint is_in_mat (m:listlist region)(x:region): bool :=
@@ -150,23 +150,23 @@ Fixpoint get_col_region (m:listlist region)(r:region): option :=
 Fixpoint get_col_row_region(m:listlist region)(r:region): option * option := 
 let col := get_col_region m r in ((col, get_row_region (get_col m (option_elim 0 col)) r)).
 
- Eval compute in get_col_region {[OO Z,OI Z],[IO Z,IO Z]} (IO Z).
+Eval compute in get_col_region '{[OO Z,OI Z],[IO Z,IO Z]} (IO Z).
 
-Eval compute in is_in_mat {[OO Z,OI Z],[IO Z,IO Z]} (II Z).
-Eval compute in is_in_mat {[OO Z,OI Z],[IO Z,IO Z]} (OI Z).
+Eval compute in is_in_mat '{[OO Z,OI Z],[IO Z,IO Z]} (II Z).
+Eval compute in is_in_mat '{[OO Z,OI Z],[IO Z,IO Z]} (OI Z).
 
-Eval compute in {[0,1],[3,4]}.
-Eval compute in {[OO Z,OI Z],[II Z]}.
+Eval compute in '{[0,1],[3,4]}.
+Eval compute in '{[OO Z,OI Z],[II Z]}.
 (* Probleme d'homogeneité des listlist *)
-Eval compute in get_col {[0,1],[3,4]} 1.
-Eval compute in get_col {[OO Z],[II Z],[OO Z,OI Z]} 2.
+Eval compute in get_col '{[0,1],[3,4]} 1.
+Eval compute in get_col '{[OO Z],[II Z],[OO Z,OI Z]} 2.
 
-Eval compute in get_mat_elm {[OO Z, OI Z],[IO Z, II Z],[OO Z,OI Z]} 1 2.
+Eval compute in get_mat_elm '{[OO Z, OI Z],[IO Z, II Z],[OO Z,OI Z]} 1 2.
 (* Eval compute in get_mat_reg {[OO Z, OI Z],[IO Z, II Z],[OO Z,OI Z]} 1 2. *)
 
-Eval compute in horcat {[OO Z,OI Z],[II Z]} {[IO Z]}.
-Eval compute in vertcat {[OO Z,OI Z],[II Z]} {[IO Z],[II Z]}.
-Eval compute in vertcat {[OO Z,OI Z],[II Z]} {[IO Z]}.
+Eval compute in horcat '{[OO Z,OI Z],[II Z]} '{[IO Z]}.
+Eval compute in vertcat '{[OO Z,OI Z],[II Z]} '{[IO Z],[II Z]}.
+Eval compute in vertcat '{[OO Z,OI Z],[II Z]} '{[IO Z]}.
 
 (* Fixpoint compare_list_count (m:listlist)(n:nat) : bool := 
     match m with
@@ -177,14 +177,14 @@ Eval compute in vertcat {[OO Z,OI Z],[II Z]} {[IO Z]}.
                         false
     end. *)
 
-Eval compute in is_matrix {[OO Z,II Z],[OO Z, II Z]}.
-Eval compute in is_square_matrix {[]}.
-Eval compute in is_square_matrix {[1,2]}.
-Eval compute in is_square_matrix {[OO Z]}.
-Eval compute in is_square_matrix {[OO Z,OI Z]}.
-Eval compute in is_square_matrix {[OO Z,II Z],[IO Z,OO Z]}.
-Eval compute in is_square_matrix {[1,2],[3,4]}.
-Eval compute in is_square_matrix {[1,2,3],[4,5,6],[7,8,9]}.
+Eval compute in is_matrix '{[OO Z,II Z],[OO Z, II Z]}.
+Eval compute in is_square_matrix '{[]}.
+Eval compute in is_square_matrix '{[1,2]}.
+Eval compute in is_square_matrix '{[OO Z]}.
+Eval compute in is_square_matrix '{[OO Z,OI Z]}.
+Eval compute in is_square_matrix '{[OO Z,II Z],[IO Z,OO Z]}.
+Eval compute in is_square_matrix '{[1,2],[3,4]}.
+Eval compute in is_square_matrix '{[1,2,3],[4,5,6],[7,8,9]}.
 
 (* Essayer de généraliser la construction des fonctions de même structure mais de type different, ie: equal_list et equal_listlist par exemple. 
    Trouver un moyen d'exprimer les cas du match en général. *)
@@ -195,7 +195,7 @@ match m1, m2 with
 | _, _ => false
 end.
 
-Eval compute in equal_listlist_region {[OO Z, IO Z], [II Z, OI Z]} {[OO Z, IO Z], [IO Z, OI Z]}.
+Eval compute in equal_listlist_region '{[OO Z, IO Z], [II Z, OI Z]} '{[OO Z, IO Z], [IO Z, OI Z]}.
 
 (* ### Preuves ### *)
 

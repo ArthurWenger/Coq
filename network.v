@@ -1,4 +1,6 @@
+Require Import option.
 Require Import region.
+Require Import listlist.
 Require Import partition_plan.
 
 (* ########## Modélisation du réseau (noeud / graphe / chemin / route ...) ###########*)
@@ -19,6 +21,9 @@ Definition graph:= netnode -> netnode -> bool.
 (* Le reseau contient des noeuds repartis par region.
    L'appartenance d'un noeud à une region est representé par une fonction booléenne. *)
 Definition loc_geo := region -> netnode -> bool.
+
+Locate "{".
+(* Notation "{ x : A  |  P }" := (sig A (fun x => P)) (at level 0, x at level 99). *)
 
 (* Chaque region contient au moins un noeud *)
 Theorem no_empty_region :
@@ -43,14 +48,22 @@ Inductive has_path (g:graph) : nat -> netnode -> netnode -> Prop :=
 | HP_Self (x:netnode): has_path g O x x 
 | HP_Step (n:nat) (x y z:netnode) (ST: g x y = true) (HP: has_path g n y z): has_path g (S n) x z.
 
+Check distance_regions_elem.
+
+Definition is_in_A0 (r1 r2:region)(m: listlist region): bool := 
+match distance_regions_elem r1 r2 m with
+| None => false
+| Some d => d <? k
+end.
+
 (* Region de niveau n contenant le noeud x *)
 Definition getAn (l:loc_geo)(x:netnode)(n:nat) : region.
     destruct (no_single_node x l) as [r _].
     exact (region_at_rank r n).
 Qed.
 
-Inductive route (x:netnode): Prop :=
-| rA0 (gw: netnode) (HP: gw)
+Inductive route (l:loc_geo)(m: listlist region)(x:netnode): Prop :=
+| rA0 (gw: netnode) (HP: is_in_A0 (getAn l x max_lvl) (getAn l gw max_lvl) m = true): gw
 | rAn : x -> region -> route.
 
 

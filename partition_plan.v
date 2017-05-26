@@ -31,7 +31,7 @@ match m with
 | lcons v m' => lcons (prefix_list r v) (prefix_listlist r m')
 end.
 
-Eval compute in prefix_listlist (II Z) {[OO Z, IO Z],[OI Z]}.
+Eval compute in prefix_listlist (II Z) '{[OO Z, IO Z],[OI Z]}.
 
 (* Fixpoint prefix_listlist_bis(r: region -> region)(m:listlist region): listlist region :=
 match m with
@@ -58,10 +58,10 @@ Definition rot_nat (n : nat) : region -> region :=
    le préfixe de chaque région élémentaire à la matrice base_matrix (approche top-down). *)
 Definition get_base_matrix(n:nat) : listlist region := 
 (vertcat   
-           (horcat {[((rot_nat n) Z)]}
-                                        {[(rot_nat (n+1)) Z ]} )
-           (horcat {[(rot_nat (n+3) Z)]}
-                                      {[(rot_nat (n+2)) Z]} ) ).
+           (horcat '{[((rot_nat n) Z)]}
+                                        '{[(rot_nat (n+1)) Z ]} )
+           (horcat '{[(rot_nat (n+3) Z)]}
+                                      '{[(rot_nat (n+2)) Z]} ) ).
 
 Eval compute in get_base_matrix 0.
 
@@ -85,8 +85,8 @@ match m with
 | lcons v m' => horcat (parse_list v n) (parse_mat m' n)
 end.
 
-Eval compute in parse_mat {[OO Z, OI Z],[IO Z, II Z]} 0.
-Eval compute in parse_mat {[OO Z]} 0.
+Eval compute in parse_mat '{[OO Z, OI Z],[IO Z, II Z]} 0.
+Eval compute in parse_mat '{[OO Z]} 0.
 
 (* Enfin, on définit la fonction inductive de partionnement du plan *)
 Definition mat_partition (n:nat)(m:listlist region):listlist region :=
@@ -97,8 +97,8 @@ match n with
 | S n' => sub n' (acc+1) (parse_mat m acc) 
 end) n 0 m.
 
-Eval compute in mat_partition 1 {[OO Z]}. 
-Eval compute in mat_partition 2 {[OO Z]}.
+Eval compute in mat_partition 1 '{[OO Z]}. 
+Eval compute in mat_partition 2 '{[OO Z]}.
 
 (* Implementation de l'algo du poly. Probleme à détailler. *)
 Definition mat_partition_poly (n:nat)(m:listlist region):listlist region :=
@@ -114,7 +114,7 @@ Definition mat_partition_poly (n:nat)(m:listlist region):listlist region :=
     end ) 
     in sub n 0 m.
 
-Eval compute in mat_partition_poly 2 {[OO Z]}.
+Eval compute in mat_partition_poly 2 '{[OO Z]}.
 
 (* Liste des regions voisines d'une région contenue dans une liste de regions. *)
 Definition voisins_list (l:clist region)(r:region):clist region :=
@@ -196,7 +196,7 @@ else nil.
               voisins_list (get_col m col) r ))
   *)
 
-Eval compute in voisins_mat {[OO Z, II Z, OO Z],[II Z, OI Z, OO Z], [II Z, OO Z, II Z]} (OI Z).
+Eval compute in voisins_mat '{[OO Z, II Z, OO Z],[II Z, OI Z, OO Z], [II Z, OO Z, II Z]} (OI Z).
 
 
 Definition diff (n m:nat): nat :=
@@ -218,8 +218,8 @@ Fixpoint distance_regions_elem (r1 r2:region)(m: listlist region): option :=
     end
   )).
 
-Eval compute in (mat_partition 2 {[OO Z]}).
-Eval compute in distance_regions_elem (OO(OO(OI Z))) (OO(OI(IO Z))) (mat_partition 2 {[OO Z]}).
+Eval compute in (mat_partition 2 '{[OO Z]}).
+Eval compute in distance_regions_elem (OO(OO(OI Z))) (OO(OI(IO Z))) (mat_partition 2 '{[OO Z]}).
 
 (* ############# Preuves diverses ############### *)
 
