@@ -119,8 +119,9 @@ Eval compute in mylistlist.
 Definition mylistlist2 := lcons [OO Z,OI Z] (lcons [II Z,IO Z] lnil ).
 Eval compute in mylistlist2.
 
-Notation "'{ }" := lnil : type_scope.
-Notation "'{ x , .. , y }" := (lcons x .. (lcons y lnil) ..) : type_scope.
+Notation "'{ }" := lnil.
+Notation "'{ x , .. , y }" := (lcons x .. (lcons y lnil) ..).
+Notation "m _[ r , c ]" := (get_mat_elm m r c) (at level 50).
 
 (* Permet de vérifier qu'une région est dans une matrice. *)
 Fixpoint is_in_mat (m:listlist region)(x:region): bool :=
@@ -151,6 +152,7 @@ Fixpoint get_col_row_region(m:listlist region)(r:region): option * option :=
 let col := get_col_region m r in ((col, get_row_region (get_col m (option_elim 0 col)) r)).
 
 Eval compute in get_col_region '{[OO Z,OI Z],[IO Z,IO Z]} (IO Z).
+Eval compute in '{[OO Z,OI Z]}_[1,0].
 
 Eval compute in is_in_mat '{[OO Z,OI Z],[IO Z,IO Z]} (II Z).
 Eval compute in is_in_mat '{[OO Z,OI Z],[IO Z,IO Z]} (OI Z).
