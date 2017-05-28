@@ -72,7 +72,7 @@ Qed. *)
 Definition is_square_matrix {A:Type}(m:listlist A) : bool :=
 match m with
 | lnil => true
-| lcons l' m' => andb (is_matrix m) (Nat.eqb (list_count l') (mat_count m))
+| lcons l' m' => (is_matrix m) && (Nat.eqb (list_count l') (mat_count m))
 end. 
 
 (* OLD
@@ -99,7 +99,7 @@ Fixpoint get_col {A:Type}(m:listlist A)(n:nat): clist A :=
   match m, n with
   | lnil, _ => nil
   | lcons l m', 0 => l
-  | lcons l m', S n' => get_col m' (n')
+  | lcons l m', S n' => get_col m' n'
   end.
 
 (* Permet de récupérer un élément situé à la ligne row et la colonne nat d'une [listlist] *)
@@ -179,7 +179,7 @@ Eval compute in vertcat '{[OO Z,OI Z],[II Z]} '{[IO Z]}.
                         false
     end. *)
 
-Eval compute in is_matrix '{[OO Z,II Z],[OO Z, II Z]}.
+Eval compute in is_matrix '{[OO Z, II Z],[OO Z, II Z]}.
 Eval compute in is_square_matrix '{[]}.
 Eval compute in is_square_matrix '{[1,2]}.
 Eval compute in is_square_matrix '{[OO Z]}.
@@ -188,7 +188,7 @@ Eval compute in is_square_matrix '{[OO Z,II Z],[IO Z,OO Z]}.
 Eval compute in is_square_matrix '{[1,2],[3,4]}.
 Eval compute in is_square_matrix '{[1,2,3],[4,5,6],[7,8,9]}.
 
-(* Essayer de généraliser la construction des fonctions de même structure mais de type different, ie: equal_list et equal_listlist par exemple. 
+(* TODO: Essayer de généraliser la construction des fonctions de même structure mais de type different, ie: equal_list et equal_listlist par exemple. 
    Trouver un moyen d'exprimer les cas du match en général. *)
 Fixpoint equal_listlist_region (m1 m2:listlist region): bool :=
 match m1, m2 with 

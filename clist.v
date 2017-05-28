@@ -2,7 +2,7 @@ Require Import region.
 Require Import option.
 
 Section customlist.
-(* Le type inductif [clist] permet de construire de listes.
+(* Le type inductif [clist] permet de construire des listes.
    Le parametre A permet de garantir le polymorphisme des listes. *)
 Inductive clist (A:Type): Type :=
   | nil : clist A
@@ -87,7 +87,7 @@ Eval compute in get_list_elm [1,2,3] 1.
 Eval compute in is_in_list [OO Z,OI Z,IO Z] (II Z).  
 Eval compute in is_in_list [OO Z,OI Z,IO Z] (IO Z). 
 
-(* Permet d'alléger le code lorsqu'on récupère des region à partir d'option *)
+(* Permet d'alléger le code lorsqu'on récupère des regions à partir d'options *)
 Definition get_list_reg (l:clist region)(n:nat): region := option_elim Z (get_list_elm l n). 
 
 Eval compute in get_list_reg [OO Z,IO Z,II Z] 2.
