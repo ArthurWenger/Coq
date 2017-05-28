@@ -14,6 +14,12 @@ match l with
 | cons n l' => cons (concat_region r n) (prefix_list r l')  
 end.
 
+Fixpoint suffix_list(r: region)(l:clist region): clist region :=
+match l with
+| nil => l
+| cons n l' => cons (concat_region n r) (suffix_list r l')  
+end.
+
 (* Fixpoint prefix_list_bis(r: region -> region)(l:clist region): clist region :=
 match l with
 | nil => l
@@ -22,18 +28,24 @@ end. *)
 
 Eval compute in prefix_list (II Z) [OO Z, IO Z].
 
-Fixpoint prefix_listlist(r: region)(m:listlist region): listlist region :=
+Fixpoint prefix_mat(r: region)(m:listlist region): listlist region :=
 match m with
 | lnil => m
-| lcons v m' => lcons (prefix_list r v) (prefix_listlist r m')
+| lcons v m' => lcons (prefix_list r v) (prefix_mat r m')
 end.
 
-Eval compute in prefix_listlist (II Z) '{[OO Z, IO Z],[OI Z]}.
-
-(* Fixpoint prefix_listlist_bis(r: region -> region)(m:listlist region): listlist region :=
+Fixpoint suffix_mat(r: region)(m:listlist region): listlist region :=
 match m with
 | lnil => m
-| lcons v m' => lcons (prefix_list_bis r v) (prefix_listlist_bis r m')
+| lcons v m' => lcons (suffix_list r v) (suffix_mat r m')
+end.
+
+Eval compute in prefix_mat (II Z) '{[OO Z, IO Z],[OI Z]}.
+
+(* Fixpoint prefix_mat_bis(r: region -> region)(m:listlist region): listlist region :=
+match m with
+| lnil => m
+| lcons v m' => lcons (prefix_list_bis r v) (prefix_mat_bis r m')
 end. *)
 
 (* Permet d'effectuer la rotation des régions à chaque partitionnement du plan.
@@ -54,21 +66,49 @@ Definition rot_nat (n : nat) : region -> region :=
    - on peut partir du partionnement de niveau n et construire le partionnement n+1 en concatenant
    le préfixe de chaque région élémentaire à la matrice base_matrix (approche top-down). *)
 Definition get_base_matrix(n:nat) : listlist region := 
-(vertcat   
-           (horcat '{[((rot_nat n) Z)]}
-                                        '{[(rot_nat (n+1)) Z ]} )
-           (horcat '{[(rot_nat (n+3) Z)]}
-                                      '{[(rot_nat (n+2)) Z]} ) ).
+'{[ (rot_nat n) Z, rot_nat (n+3) Z ], [(rot_nat (n+1)) Z, (rot_nat (n+2)) Z ] }.
+
+(* Equivalent à: 
+(vertcat   (horcat '{[((rot_nat n) Z)]}   '{[(rot_nat (n+1)) Z ]} )
+           (horcat '{[(rot_nat (n+3) Z)]} '{[(rot_nat (n+2)) Z]}  )).
+*)
 
 Eval compute in get_base_matrix 0.
 
-(* On met en place le partitionnement top-down.
+(* Approche bottom-up: On part de la matrice de base de niveau n. En concatenant cette matrice 
+   sur les 4 quarts d'une nouvelle matrice et en ajoutant à chaque quart la région appoprié de 
+   la matrice de base de niveau n-1, on obtient un partitionnement pour la matrice de niveau n-1.
+   En effectuant cette opération n fois on obtient le partitionnement de niveau n. 
+   
+   Le parametre r correspond à la première region du partitionnement (soit OO, OI, II ou IO). 
+   La fonction auxiliaire sert à différencier le cas n=0 et n= S n. 
+   Dans le cas n=0 on renvoi seulement la première region. Dans le cas n=S n on met en place la recursivité 
+   sur la matrice de base de niveau n *)
+Definition mat_part_bup (n:nat)(r: region):listlist region :=
+match n with
+| O => '{[r]}
+| S n' => suffix_mat r ((fix from_n_to_0 (n:nat)(m:listlist region):listlist region :=
+          match n with
+          | O => m
+          | S n' => let base := get_base_matrix n' in (
+                    from_n_to_0 n' (vertcat (horcat (suffix_mat (option_elim Z (base _[0,0])) m) (suffix_mat (option_elim Z (base _[0,1])) m ))
+                                            (horcat (suffix_mat (option_elim Z (base _[1,0])) m) (suffix_mat (option_elim Z (base _[1,1])) m ))) )
+          end) n' (get_base_matrix n'))
+end.
+
+Eval compute in mat_part_bup 2 (OO Z).
+
+
+(* Approche top-down: On remplace chaque element d'une matrice correspondant à 
+   un partitionnement de niveau n-1 par la matrice de base de niveau n. Cette 
+   nouvelle matrice correspond au partitionnement de niveau n. 
+
    On commence par définir une fonction qui transforme une liste en une matrice 
    en concatenant le prefixe de chaque élement de la liste à la matrice base_matrix. *)
 Fixpoint parse_list (l:clist region)(n:nat): listlist region :=
 match l with
 | nil => lnil
-| cons r l' => vertcat (prefix_listlist r (get_base_matrix n)) (parse_list l' n)
+| cons r l' => vertcat (suffix_mat r (get_base_matrix n)) (parse_list l' n)
 end.
 
 Eval compute in parse_list [OO (OO Z)] 0.
@@ -86,32 +126,34 @@ Eval compute in parse_mat '{[OO Z, OI Z],[IO Z, II Z]} 0.
 Eval compute in parse_mat '{[OO Z]} 0.
 
 (* Enfin, on définit la fonction inductive de partionnement du plan *)
-Definition mat_partition (n:nat)(m:listlist region):listlist region :=
-(* La fonction sub sert uniquement à cacher le compteur dans les paramètres de mat_partition *)
+Definition mat_part_tdown (n:nat)(m:listlist region):listlist region :=
+(* La fonction sub sert uniquement à cacher le compteur dans les paramètres de mat_part_tdown *)
 (fix sub(n acc:nat)(m:listlist region):listlist region :=
 match n with
 | O => m
 | S n' => sub n' (acc+1) (parse_mat m acc) 
 end) n 0 m.
 
-Eval compute in mat_partition 1 '{[OO Z]}. 
-Eval compute in mat_partition 2 '{[OO Z]}.
+Eval compute in mat_part_tdown 1 '{[OO Z]}. 
+Eval compute in mat_part_tdown 2 '{[OO Z]}.
+
 
 (* Implementation de l'algo du poly. Probleme à détailler. *)
-Definition mat_partition_poly (n:nat)(m:listlist region):listlist region :=
+Definition mat_part_tdown_poly (n:nat)(m:listlist region):listlist region :=
   let sub := (fix sub(n acc:nat)(m:listlist region):listlist region :=
     match n with
     | O => m
-    | S n' => let upright := (prefix_listlist ((rot_nat (acc+3)) Z) m) in (
-              let upleft := (prefix_listlist ((rot_nat (acc)) Z) m) in (
-              let downright := (prefix_listlist ((rot_nat (acc+2)) Z) m) in(
-              let downleft := (prefix_listlist ((rot_nat (acc+1)) Z) m) in (
+    | S n' => let upright := (prefix_mat ((rot_nat (acc+3)) Z) m) in (
+              let upleft := (prefix_mat ((rot_nat (acc)) Z) m) in (
+              let downright := (prefix_mat ((rot_nat (acc+2)) Z) m) in(
+              let downleft := (prefix_mat ((rot_nat (acc+1)) Z) m) in (
                 sub (n') (acc+1) (vertcat (horcat upleft upright) (horcat downleft downright))
               ) ) ) )
     end ) 
     in sub n 0 m.
 
-Eval compute in mat_partition_poly 2 '{[OO Z]}.
+Eval compute in mat_part_tdown_poly 2 '{[OO Z]}.
+
 
 (* Liste des regions voisines d'une région contenue dans une liste de regions. *)
 Definition voisins_list (l:clist region)(r:region):clist region :=
@@ -215,8 +257,8 @@ Fixpoint distance_regions_elem (r1 r2:region)(m: listlist region): option :=
     end
   )).
 
-Eval compute in (mat_partition 2 '{[OO Z]}).
-Eval compute in distance_regions_elem (OO(OO(OI Z))) (OO(OI(IO Z))) (mat_partition 2 '{[OO Z]}).
+Eval compute in (mat_part_tdown 2 '{[OO Z]}).
+Eval compute in distance_regions_elem (OO(OO(OI Z))) (OO(OI(IO Z))) (mat_part_tdown 2 '{[OO Z]}).
 
 (* ############# Preuves diverses ############### *)
 
@@ -275,7 +317,7 @@ Proof.
 Qed.
 
 (* TODO: Preuve que le partionnement est une matrice carré si on commence par OO Z ou n'importe qu'elle matrice carré *)
-Theorem is_partition_square (n:nat)(m:listlist region): is_square_matrix m = true -> is_square_matrix (mat_partition n m) = true .
+Theorem is_partition_square (n:nat)(m:listlist region): is_square_matrix m = true -> is_square_matrix (mat_part_tdown n m) = true .
 Proof.
    Admitted.
 
@@ -309,81 +351,3 @@ Lemma O_lt_Sn_bis (n:nat): 0 <? S n = true.
   rewrite Nat.ltb_lt. 
   apply O_lt_Sn.
 Qed. *)
-
-
-(*  TESTS INUTILES
- 
-  case_eq (vertcat m1 m2). intro. simpl. 
-
-  decompose H.
-  lapply bar A m1 m2.
-  simpl. unfold vertcat. 
-
-(*
-  induction col.
-  destruct m1. simpl. reflexivity.
-  simpl. destruct m2. simpl. rewrite concat_list_nil. reflexivity.
-  simpl. reflexivity.
-  destruct (vertcat m1 m2).
-  destruct m1. destruct m2. simpl. reflexivity.
-  simpl. reflexivity. *)
-
-  destruct m1. simpl. reflexivity.
-  destruct m2. simpl. rewrite concat_list_nil. reflexivity.
-  induction col. simpl. reflexivity.
-  simpl. rewrite Nat.sub_0_r.
-
-  induction col.
-  case m1. reflexivity.
-  intros. case m2. simpl. rewrite concat_list_nil. reflexivity.
-  intros. simpl. reflexivity.
-  unfold get_col. unfold vertcat. 
-
-  induction col.
-  case m1. reflexivity.
-  intros. case m2. simpl. rewrite concat_list_nil. reflexivity.
-  intros. simpl. reflexivity.
-  case m1. simpl. reflexivity.
-  intros. case m2. simpl. rewrite Nat.sub_0_r. rewrite concat_list_nil. reflexivity.
-  intros. simpl. rewrite Nat.sub_0_r.
-  rewrite IHcol.
-  
-  rewrite get_col_lcons.
-  
-   reflexivity.
-  case col. rewrite get_col_0_lcons.
-
-  case m2. simpl. rewrite concat_list_nil. reflexivity.
-  intros. simpl. reflexivity.
-  intros.
-  rewrite get_col_lcons.
-
-  simpl. rewrite Nat.sub_0_r.
-  
-  induction m1. reflexivity.
-  case col. rewrite get_col_0_lcons.
-  case m2. simpl. rewrite concat_list_nil. reflexivity.
-  intros.
-  rewrite foo. case col.
-  simpl. reflexivity.
-  intros.
-  simpl. rewrite Nat.sub_0_r.
-
-  unfold vertcat.
-  induction m1 . reflexivity.
-  case_eq m2 . simpl. rewrite concat_list_nil. reflexivity.
-  simpl. case_eq col. simpl. reflexivity.
-  simpl. intros. rewrite Nat.sub_0_r.
-  unfold get_col.
-  rewrite concat_list_nil. reflexivity.
-
-  induction m2 as [|l2 m2']. simpl. rewrite concat_list_nil. reflexivity.
-  simpl. 
-  destruct col. reflexivity. 
-  rewrite O_lt_Sn_bis. simpl. rewrite Nat.sub_0_r.
-   reflexivity.
-
-  unfold vertcat.
-  destruct m1 as [|l1 m1']. simpl. reflexivity. destruct m2 as [|l2 m2']. 
-  simpl. rewrite concat_list_nil. reflexivity.
-  simpl. destruct col. simpl. reflexivity. rewrite O_lt_Sn_bis. reflexivity. *)
