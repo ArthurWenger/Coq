@@ -1,15 +1,16 @@
 Require Import option.
 Require Import region.
+Require Import clist.
 Require Import listlist.
 Require Import partition_plan.
 
 (* ########## Modélisation du réseau (noeud / graphe / chemin / route ...) ###########*)
 Section network.
 (* k = rayon de A0 en terme de regions elementaires *)
-Variable k : nat.
+Parameter k : nat.
 
 (* max_lvl = niveau maximum des regions voisines d'un noeud du reseau *)
-Variable max_lvl : nat.
+Parameter max_lvl : nat.
 
 (* netnode = noeud du reseau. On les numerote avec des entiers. *)
 Definition netnode := nat.
@@ -62,18 +63,24 @@ Definition getAn (l:loc_geo)(x:netnode)(n:nat) : region.
     exact (region_at_rank r n).
 Qed.
 
-Inductive route (l:loc_geo)(m: listlist region)(x:netnode): Prop :=
-| rA0 (gw: netnode) (HP: is_in_A0 (getAn l x max_lvl) (getAn l gw max_lvl) m = true): gw
-| rAn : x -> region -> route.
+Inductive route (l:loc_geo)(m: listlist region)(x:netnode): Set :=
+(* l'ensemble des noeuds du réseau situés dans A0 par rapport à x *)
+| rA0: forall (gw:netnode) (HP: is_in_A0 (getAn l x max_lvl) (getAn l gw max_lvl) m = true), route l m x 
+(* l'ensemble des régions voisines de la region élémentaire contenant x *)
+| rAn: forall (r:region)(HP: is_in_list (voisins_mat m (getAn l x max_lvl)) r = true), route l m x. 
 
 
 
+(*
+Theorem (g:graph)(l:loc_geo)(m:listlist region)(init:region)(x y:netnode): 
+m = mat_part_bup max_level init -> (* m correspond au partitionnement du plan *)
+exists (d:nat), has_path g d x y -> (* il existe un chemin de longueur d entre x et y *)
 
+Proof.
+  
+Qed. *)
 
-
-
-
-
+(*
 Definition test_x : netnode := 10 .
 
 Definition test_loc (r:region) (x:netnode) :  := 
@@ -86,7 +93,7 @@ Definition test_loc (r:region) (x:netnode) :  :=
     false.
 
 Eval compute in getAn test_loc test_x 1.
-
+*)
 
 (* TODO: Modéliser une route *)
 (* TODO: Prouver la propriété: 
