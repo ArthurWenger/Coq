@@ -19,7 +19,7 @@ Implicit Arguments lcons [A].
 Fixpoint mat_count {A:Type}(m:listlist A): nat :=
 match m with
 | lnil => 0
-| lcons l m' => 1 + mat_count m'
+| lcons _ m' => 1 + mat_count m'
 end.
 
 (* Concatene deux [listlist] horizontalement *)
@@ -102,7 +102,7 @@ Fixpoint get_col {A:Type}(m:listlist A)(n:nat): clist A :=
   | lcons l m', S n' => get_col m' n'
   end.
 
-(* Permet de récupérer un élément situé à la ligne row et la colonne nat d'une [listlist] *)
+(* Permet de récupérer un élément situé à la ligne row et la colonne col d'une [listlist] *)
 Fixpoint get_mat_elm {A:Type}(m:listlist A)(row:nat)(col:nat): option :=
   get_list_elm (get_col m col) row.
 End listlist.
@@ -223,20 +223,27 @@ Proof.
 Qed.
 
 Theorem rel_vertcat_concatlist {A:Type}(m1 m2:listlist A)(col:nat): 
+col <= min (mat_count m1)(mat_count m2) -> 
 get_col (vertcat m1 m2) col = get_col m1 col ++ get_col m2 col .
 Proof.
 Admitted.
 
 Theorem getcol_vertcat_count {A:Type}(m1 m2:listlist A)(col:nat): 
+col <= min (mat_count m1)(mat_count m2) -> 
 list_count (get_col (vertcat m1 m2) col) = list_count (get_col m1 col) + list_count (get_col m2 col).
 Proof.
+  intro H.
   rewrite <- concat_list_count. 
-  rewrite rel_vertcat_concatlist. 
+  rewrite rel_vertcat_concatlist.
   reflexivity.
+  assumption.
 Qed. 
 
 Theorem double_square_concat_is_square {A:Type}(m1 m2 m3 m4:listlist A): 
-is_square_matrix m1 = true -> is_square_matrix m2 = true -> is_square_matrix m3 = true -> is_square_matrix m4 = true ->
+is_square_matrix m1 = true -> 
+is_square_matrix m2 = true -> 
+is_square_matrix m3 = true -> 
+is_square_matrix m4 = true ->
 is_square_matrix (vertcat (horcat m1 m2) (horcat m3 m4)) = true.
 Proof.
   Admitted.
@@ -245,8 +252,14 @@ Proof.
   rewrite vertcat_count.
   rewrite ?horcat_count. *)
 
+Lemma foobar (n:nat): n < 1 -> n = 0.
+Admitted.
+Check foobar.
+
 Theorem is_matrix_homogeneous {A:Type}(a b:nat)(m:listlist A):
-is_matrix m = true -> list_count (get_col m a) = list_count (get_col m b).
+is_matrix m = true -> 
+a < mat_count m /\ b < mat_count m ->
+list_count (get_col m a) = list_count (get_col m b).
 Proof.
   Admitted.
  (* unfold is_matrix. 

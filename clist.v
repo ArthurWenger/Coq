@@ -20,7 +20,7 @@ Implicit Arguments cons [A].
 Fixpoint list_count {A:Type} (l:clist A) : nat := 
   match l with
   | nil => 0
-  | cons n l' =>  1 + list_count l'
+  | cons _ l' =>  1 + list_count l'
   end.
 
 (* Permet de concatener deux listes de meme type. *)

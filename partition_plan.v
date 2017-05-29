@@ -76,7 +76,7 @@ Definition get_base_matrix(n:nat) : listlist region :=
 Eval compute in get_base_matrix 0.
 
 (* Approche bottom-up: On part de la matrice de base de niveau n. En concatenant cette matrice 
-   sur les 4 quarts d'une nouvelle matrice et en ajoutant à chaque quart la région appoprié de 
+   sur les 4 quarts d'une nouvelle matrice et en ajoutant à chaque quart la région appopriée de 
    la matrice de base de niveau n-1, on obtient un partitionnement pour la matrice de niveau n-1.
    En effectuant cette opération n fois on obtient le partitionnement de niveau n. 
    
