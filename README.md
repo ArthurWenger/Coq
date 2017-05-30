@@ -1,6 +1,6 @@
 Une tentative de modélisation d'un réseau sur [Coq 8.6](https://coq.inria.fr/) ayant pour objectif de démontrer un ensemble de proprietés sur un protocole de routage experimental.
 
-## Contenu des fichiers
+## Contenu du code
 
 * __option.v__ : Un type inductif permettant d'éliminer les paramètres par défaut dans les définitions sur des types polymorphes.
 
@@ -17,10 +17,16 @@ Les matrices de régions permettent de représenter le partitionnement du plan d
 
 * __network.v__ : La modélisation du réseau et des propriétés à démontrer.
 
-### Dates et conditions de rendu
+## Contenu de la documentation
+
+* __Memoire_stage__ : Un descriptif de la modélisation du réseau et du principe des fonctions developpées dans le code.
+
+* __Support_oral__ : Un support pour la présentation orale du projet.
+
+## Dates et conditions de rendu
 
 * Lundi 05 juin à 9h: rendre le code, le rapport ainsi que la presentation orale. 
-* Soutenance le 6 juin à 14h
+* Soutenance le mardi 06 juin à 14h (environ 20 min d'oral)
 * Le rapport doit contenir entre 10 et 15 pages et la présentation environ 15 pages.
 * Style imposé pour le rendu Latex: beamer.
 
