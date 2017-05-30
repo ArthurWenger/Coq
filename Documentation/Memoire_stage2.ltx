@@ -1,0 +1,622 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{listings}
+
+\lstdefinelanguage{Coq}{ 
+%
+% Anything betweeen $ becomes LaTeX math mode
+mathescape=true,
+%
+% Comments may or not include Latex commands
+texcl=false, 
+%
+% Vernacular commands
+morekeywords=[1]{Section, Module, End, Require, Import, Export,
+  Variable, Variables, Parameter, Parameters, Axiom, Hypothesis,
+  Hypotheses, Notation, Local, Tactic, Reserved, Scope, Open, Close,
+  Bind, Delimit, Definition, Let, Ltac, Fixpoint, CoFixpoint, Add,
+  Morphism, Relation, Implicit, Arguments, Unset, Contextual,
+  Strict, Prenex, Implicits, Inductive, CoInductive, Record,
+  Structure, Canonical, Coercion, Context, Class, Global, Instance,
+  Program, Infix, Theorem, Lemma, Corollary, Proposition, Fact,
+  Remark, Example, Proof, Goal, Save, Qed, Defined, Hint, Resolve,
+  Rewrite, View, Search, Show, Print, Printing, All, Eval, Check,
+  Projections, inside, outside, Def},
+%
+% Gallina
+morekeywords=[2]{forall, exists, exists2, fun, fix, cofix, struct,
+  match, with, end, as, in, return, let, if, is, then, else, for, of,
+  nosimpl, when},
+%
+% Sorts
+morekeywords=[3]{Type, Prop, Set, true, false, option},
+%
+% Various tactics, some are std Coq subsumed by ssr, for the manual purpose
+morekeywords=[4]{pose, set, move, case, elim, apply, clear, hnf,
+  intro, intros, generalize, rename, pattern, after, destruct,
+  induction, using, refine, inversion, injection, rewrite, congr,
+  unlock, compute, ring, field, fourier, replace, fold, unfold,
+  change, cutrewrite, simpl, have, suff, wlog, suffices, without,
+  loss, nat_norm, assert, cut, trivial, revert, bool_congr, nat_congr,
+  symmetry, transitivity, auto, split, left, right, autorewrite},
+%
+% Terminators
+morekeywords=[5]{by, done, exact, reflexivity, tauto, romega, omega,
+  assumption, solve, contradiction, discriminate},
+%
+% Control
+morekeywords=[6]{do, last, first, try, idtac, repeat},
+%
+% Comments delimiters, we do turn this off for the manual
+morecomment=[s]{(*}{*)},
+%
+% Spaces are not displayed as a special character
+showstringspaces=false,
+%
+% String delimiters
+morestring=[b]",
+morestring=[d]’,
+%
+% Size of tabulations
+tabsize=2,
+%
+% Enables ASCII chars 128 to 255
+extendedchars=false,
+%
+% Case sensitivity
+sensitive=true,
+%
+% Automatic breaking of long lines
+breaklines=false,
+%
+% Default style fors listings
+basicstyle=\small,
+%
+% Position of captions is bottom
+captionpos=b,
+%
+% flexible columns
+columns=[l]flexible,
+%
+% Style for (listings') identifiers
+identifierstyle={\ttfamily\color{black}},
+% Style for declaration keywords
+keywordstyle=[1]{\ttfamily\color{violet}},
+% Style for gallina keywords
+keywordstyle=[2]{\ttfamily\color{green!80!black}},
+% Style for sorts keywords
+keywordstyle=[3]{\ttfamily\color{cyan}},
+% Style for tactics keywords
+keywordstyle=[4]{\ttfamily\color{blue}},
+% Style for terminators keywords
+keywordstyle=[5]{\ttfamily\color{red}},
+%Style for iterators
+%keywordstyle=[6]{\ttfamily\color{dkpink}},
+% Style for strings
+stringstyle=\ttfamily,
+% Style for comments
+commentstyle={\ttfamily\color{red!50!black}},
+%
+%moredelim=**[is][\ttfamily\color{red}]{/&}{&/},
+literate=
+    {\\forall}{{\color{green!80!black}{$\forall\;$}}}1
+    {\\exists}{{$\exists\;$}}1
+    {<-}{{$\leftarrow\;$}}1
+    {=>}{{$\Rightarrow\;$}}1
+    %{==}{{\code{==}\;}}1
+    {==>}{{\code{==>}\;}}1
+%    {:>}{{\code{:>}\;}}1
+    {->}{{$\rightarrow\;$}}1
+    {<->}{{$\leftrightarrow\;$}}1
+    {<==}{{$\leq\;$}}1
+    {\#}{{$^\star$}}1 
+    {\\o}{{$\circ\;$}}1 
+    {\@}{{$\cdot$}}1 
+    {\/\\}{{$\wedge\;$}}1
+    {\\\/}{{$\vee\;$}}1
+    %{++}{{\code{++}}}1
+    {~}{{\ }}1
+    {\@\@}{{$@$}}1
+    {\\mapsto}{{$\mapsto\;$}}1
+    {\\hline}{{\rule{\linewidth}{0.5pt}}}1
+%
+}[keywords,comments,strings]
+
+\definecolor{mygrey}{rgb}{0.91,0.90,0.90}
+\lstset{language=Coq,backgroundcolor=\color{mygrey}}
+%\lstnewenvironment{coq-inline}{\lstinline{language=Coq}}{}
+
+
+\title{Rapport de stage}
+\author{Karim \bsc{Mamode} \and Arthure \bsc{Wenger}}
+\date{Lundi 22 Mai 2017} % Delete this line to display the current date
+
+%%% BEGIN DOCUMENT
+\begin{document}
+
+\maketitle
+\tableofcontents
+\setcounter{chapter}{-1}
+% Introduction --------------------------------
+\chapter{Introduction}
+Ce document est un rapport du stage effectué dans le cadre de la 3\ieme\ année de licence informatique à l'Université de la Réunion.
+
+Le but du stage est de démontrer formellement les propriétés de la thèse de Mandimby Nirina \bsc{Ranaivo} \bsc{Rakotondravelona}. Pour cela, nous avons utiliser le logiciel Coq.
+
+Il y a eu deux phases dans notre travail. La première était une étape de modélisation. Cette étape consiste à transposer les différents éléments de la thèse en langage Coq. La deuxième phase, c'étaient les démonstrations en elle même.
+
+Ce rapport présentera le travail effectué dans cet ordre. On aura une première partie qui expliquera comment nous avons modéliser en coq les régions, les routes et tout ce qui tourne autour. Dans une deuxième partie, on expliquera en langage naturel les démonstrations Coq que nous avons effectuées.
+\part{La modélisation}
+% Région -----------------------------------
+\chapter{Les régions}
+\section{Définition}
+Une région a été définie comme suit :
+
+\begin{lstlisting}
+Inductive region : Type :=
+| Z : region
+| OO : region -> region
+| OI : region -> region
+| IO : region -> region
+| II : region -> region.
+\end{lstlisting}
+
+\paragraph{Explication :}
+Une région, c'est :
+\begin{itemize}
+\item Soit une région vide. C'est l'élément de base% à compléter
+\item Soit une des 4 sous-régions d'une région.
+\end{itemize}
+\newpage
+\paragraph{Exemple :}
+Voici une région divisée en quatre sous-régions elle même divisée de la même façon.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics{Sous_region.jpg}
+\end{center}
+%\caption{Une région et ses sous régions}
+\end{figure}
+Sur cet exemple, la sous région grisée s'écrira sous la forme :\newline
+\begin{lstlisting}
+( IO ( II ( OO Z ) ) )
+\end{lstlisting}
+\paragraph{Comment le comprendre ?}
+Ici, il faut lire que \lstinline{IO} est une sous région de \lstinline{( II ( OO Z ) )}
+On note que ça se lit de droite à gauche. La sous-région la plus profonde est la plus à gauche. De même, dans cet exemple, la région \lstinline{( OO Z )} est la région qui englobe les autres régions filles.
+
+Dans les fonctions qui vont suivre, la région vide \lstinline{Z} est considéré comme la région mère d'une région de niveau 1.
+\paragraph{}
+Ainsi, nous avons une modélisation d'une région. On peut alors faire diverse fonction sur ces dernières comme on le verra dans la suite.
+\newpage
+% Niveau de région ----------
+\section{Le niveau d'une région}
+\subsection{Calcule du niveau d'une région}
+Pour calculer le niveau d'une région, nous avons définit la fonction suivante :
+\begin{lstlisting}
+Fixpoint rank (n:region) : nat :=
+    match n with
+    | Z => 0
+    | OO n' | OI n' | IO n' | II n' => 1 + rank n'
+    end.
+\end{lstlisting}
+\paragraph{Explication :}
+Le niveau d'une région, c'est :
+\begin{itemize}
+\item Dans le cas d'une région vide, 0.
+\item Dans le cas d'une région fille, c'est 1 + le niveau de la région mère.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in rank (II (OI Z)).} nous donne bien \lstinline{2}.
+\subsection{Obtenir une région d'un certain niveau}
+Pour obtenir une région de niveau \lstinline{n} contenant la région \lstinline{r}, nous avons définit la fonction suivante :
+\begin{lstlisting}
+Fixpoint region_at_rank (r:region) (n:nat) : region :=
+    if Nat.eqb (rank r) n || Nat.eqb (rank r) 1 then
+        r
+    else
+        match r with 
+         | Z => Z
+         | OO r' | OI r' | IO r' | II r' => region_at_rank r' n 
+        end.
+\end{lstlisting}
+\paragraph{Explication :}
+On renvoie la région \lstinline{r} dans deux cas :
+\begin{itemize}
+\item Soit quand le niveau de cette région est égal au niveau de région recherché, ça signifie alors qu'on a trouvé la bonne région à renvoyer.
+\item Soit quand le niveau de la région est égal à 1 (et que le niveau recherché est différent de 1), ce qui signifie qu'on a recherché une région de niveau supérieur à celui de \lstinline{r} ou de niveau \lstinline{0}.
+\end{itemize}
+Si on est dans aucun de ces cas là, la région de niveau \lstinline{n} contenant \lstinline{r} c'est :
+\begin{itemize}
+\item Dans le cas où \lstinline{r} est vide, la région vide même, puisqu'on ne peut pas aller plus profondément.
+\item Dans le cas d'une région fille, la région de niveau \lstinline{n} contenant la région mère.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in region_at_rank (OO (II (OI Z))) 2.} nous donne bien \lstinline{(II (OI Z))}.
+\subsection{Comparaison : Niveaux égaux}
+Nous avons définit une fonction qui compare si deux régions ont le même niveau :
+\begin{lstlisting}
+Fixpoint same_rank (n1 n2 : region) : bool :=
+    rank (n1) == rank (n2).
+\end{lstlisting}
+Ainsi, le code \lstinline{Eval compute in same_rank (II(OI(OO Z))) (OO(II(II Z))).} nous donne bien \lstinline{true}.
+%Région  égale -----------
+\section{Comparaison : Régions égales}
+Nous avons définit une fonction pour déterminer si deux régions sont égales ou non :
+\begin{lstlisting}
+Fixpoint equal_region (n m : region) : bool :=
+    match n, m with
+    | Z , Z => true
+    | OO n' , OO m' => equal_region n' m'
+    | OI n' , OI m' => equal_region n' m'
+    | IO n' , IO m' => equal_region n' m'
+    | II n' , II m' => equal_region n' m'
+    | _, _ => false
+    end.
+\end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si les deux régions sont vides, alors elles sont égales.
+\item Si les deux régions sont des régions filles qui ont le même numéro, alors leur région mère définit leur égalité
+\item Sinon, les deux régions ne sont pas égales.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in equal_region (II(OI(OO Z))) (OO(II(II Z))).} renverra \lstinline{false} tandis que le code \lstinline{Eval compute in equal_region (II(OI(OO Z))) (II(OI(OO Z))).} renverra \lstinline{true}.
+%Première région -----------
+\section{Première région}
+Nous avons définit une fonction qui détermine la première région d'une région donnée, c'est à dire la région de niveau 1 qui contient la région donnée.
+\begin{lstlisting}
+Fixpoint first_region (n : region) : region :=
+    match rank n with
+    | 1 => n
+    | _ => match n with 
+           | Z => Z
+           | OO n' => first_region n'
+           | OI n' => first_region n'
+           | IO n' => first_region n'
+           | II n' => first_region n'
+           end
+    end.
+\end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si le niveau de la région est 1, alors on renvoie cette région.
+\item Sinon :
+	\begin{itemize}
+	\item Si la région est vide, on renvoie la région vide.
+	\item Si c'est une région fille, on renvoie la première région de la région mère.
+	\end{itemize}
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in first_region (II(OI(OO Z))).} nous donne comme résultat\lstinline{(OO Z)}.
+%Dernière région -----------
+\section{Dernière région}
+Nous avons définit une fonction qui détermine la dernière région d'une région donné, c'est à dire la région fille de plus haut niveau.
+\begin{lstlisting}
+Fixpoint last_region (n : region) : region :=
+    match n with 
+    | Z => Z
+    | OO n' => OO Z
+    | OI n' => OI Z
+    | IO n' => IO Z
+    | II n' => II Z
+    end.
+\end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si c'est une région vide, on renvoie une région vide
+\item Si c'est une région fille, on la renvoie sans sa région mère (à part la région vide).
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in last_region (II(OI(OO Z))).} nous donne comme résultat\lstinline{(II Z)}.
+%Hiérarchie -------------------------------------
+\chapter{Les hiérarchies de régions}
+\section{Définition}
+La première représentation des ensembles de régions que nous avons choisie est la forme hiérarchique. Nous l'avons définit comme suit :
+
+\begin{lstlisting}
+Inductive treeRegion :=
+  | Leaf : region -> treeRegion
+  | Node : region -> treeRegion -> treeRegion -> treeRegion -> treeRegion -> treeRegion.
+\end{lstlisting}
+
+\paragraph{Explication :}
+La hiérarchie des régions, c'est :
+\begin{itemize}
+\item Soit une feuille de l'arbre contenant une région. Elle représente une région qui n'a pas de région fille.
+\item Soit un noeud de degré 5 (ou quatre s'il est au sommet de la hiérarchie) représentant une région mère qui contient ses quatre régions filles.
+\end{itemize}
+Dans la suite, nous appelleront le type \lstinline{treeRegion} \lstinline{t} pour plus de facilité.
+\newpage
+\paragraph{Exemple :}
+Voici une hiérarchie de 2 noeuds internes et 7 feuilles.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics{Hierarchie_region.jpg}
+\end{center}
+\end{figure}
+Sur cet exemple, la hiérarchie s'écrira de la façon suivante :
+\begin{lstlisting}
+Node (OO Z) (Leaf (OO (OO Z)))
+            (Leaf (OI (OO Z)))
+            (Node (II (OO Z)) (Leaf (OO (II (OO Z))))
+                              (Leaf (OI (II (OO Z))))
+                              (Leaf (II (II (OO Z))))
+                              (Leaf (IO (II (OO Z)))))
+            (Leaf (IO (OO Z)))
+\end{lstlisting}
+\paragraph{Comment le comprendre ?}
+Ici, il faut lire que la région \lstinline{(OO Z)} est la region mère des régions \lstinline{(OO (OO Z))}, \lstinline{(OI (OO Z))}, \lstinline{(II (OO Z))} et \lstinline{(IO (OO Z))}. La région \lstinline{(II (OO Z))} n'est pas une feuille mais un noeud interne de l'arbre car c'est la région mère des régions \lstinline{(OO (II (OO Z)))}, \lstinline{(OI (II (OO Z)))}, \lstinline{(II (II (OO Z)))} et \lstinline{(IO (II (OO Z)))}.
+
+Dans la suite, nous utiliserons ce graphe comme référence dans les exemples.
+\paragraph{}
+Maintenant que nous avons définit la hiérarchie en arbre des régions, nous pouvons définir différentes fonctions sur celle-ci.
+\newpage
+% Hauteur de l'arbre ---------------
+\section{La hauteur de l'arbre}
+Pour calculer la hauteur d'un arbre, nous avons définit la fonction suivante :
+\begin{lstlisting}
+Fixpoint height (m : t) : nat :=
+  match m with
+  | Leaf _ => 0
+  | Node _ l ml mr r => 1 + Nat.max (Nat.max (height l) (height ml))
+                                    (Nat.max (height mr) (height r))
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+La hauteur d'un arbre, c'est :
+\begin{itemize}
+\item S'il s'agit d'une feuille, \lstinline{0}.
+\item S'il s'agit d'un noeud interne, \lstinline{1} plus la hauteur maximum de ses sous-arbres.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, la fonction appliquée à notre arbre précédent renverra \lstinline{2}.
+% Cardinal de l'arbre -----------
+\section{Le cardinal de l'arbre}
+Pour calculer le cardinal d'un arbre, nous avons définit la fonction suivante :
+\begin{lstlisting}
+Fixpoint cardinal (m : t) : nat :=
+  match m with
+   | Leaf _ => 1
+   | Node _ l ml mr r => 1 + cardinal l + cardinal ml + cardinal mr + cardinal r
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+Le cardinal d'un arbre c'est :
+\begin{itemize}
+\item S'il s'agit d'une feuille, \lstinline{1}.
+\item S'il s'agit d'un noeud interne, \lstinline{1} plus la somme des cardinaux de ses sous-arbres.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, la fonction appliquée à notre arbre précédent renverra \lstinline{9}.
+\newpage
+% Nombre de feuille ---------------
+\section{Le nombre de feuille de l'arbre}
+Pour calculer le nombre de feuille d'un arbre, nous avons définit la fonction suivante :
+\begin{lstlisting}
+Fixpoint cardinal_leaf (m : t) : nat :=
+  match m with
+   | Leaf _ => 1
+   | Node _ l ml mr r => cardinal_leaf l + cardinal_leaf ml
+                       + cardinal_leaf mr + cardinal_leaf r
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+Le nombre de feuille d'un arbre c'est :
+\begin{itemize}
+\item S'il s'agit d'une feuille, \lstinline{1}.
+\item S'il s'agit d'un noeud interne, la somme du nombre de feuille de ses sous-arbres.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, la fonction appliquée à notre arbre précédent renverra \lstinline{7}.
+% Liste de région --------------------------------
+\chapter{Les listes de région}
+\section{Définition d'une liste}
+La deuxième représentation d'ensemble de régions que nous avons choisis est sous forme de liste.
+Pour cela, nous avons définit un type \lstinline{clist}, qui construit des listes de n'importe quel type :
+\begin{lstlisting}
+Inductive clist (A:Type): Type :=
+  | nil : clist A
+  | cons : A -> clist A -> clist A.
+\end{lstlisting}
+
+\paragraph{Explication :}
+Une liste, c'est :
+\begin{itemize}
+\item Soit une liste vide \lstinline{nil}
+\item Soit un élément associé à une sous-liste.
+\end{itemize}
+\paragraph{Notation :}
+Afin de faciliter l'écriture nous avons définit des notations standards, ainsi :
+\begin{itemize}
+\item \lstinline{(cons x l)} se notera \lstinline{x :: l}
+\item \lstinline{(cons x .. (cons y nil) ..)} se notera \lstinline{[ x , .. , y ]}
+\item la liste vide \lstinline{nil} se notera \lstinline{[ ]}
+\end{itemize}
+\paragraph{Exemple :\\}
+Une liste d'entier \lstinline{(clist nat)}:
+\begin{lstlisting}
+[3, 1, 5, 2, 4]
+\end{lstlisting}
+Une liste de région \lstinline{(clist region)} :
+\begin{lstlisting}
+[OO Z, IO (OO Z), IO Z, OI (IO Z)]
+\end{lstlisting}
+Maintenant que les listes sont définit, on verra quelques fonctions utiles sur les listes.
+% La taille de liste --------
+\section{La taillle d'une liste}
+Nous avons définit une fonction qui compte le nombre d'élément d'une liste :
+\begin{lstlisting}
+Fixpoint list_count {A:Type} (l:clist A) : nat := 
+  match l with
+  | nil => 0
+  | cons n l' =>  1 + list_count l'
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+La taille d'une liste c'est :
+\begin{itemize}
+\item Si la liste est vide, 0.
+\item Si la liste contient au moins un élément, 1 + la taille du reste de la liste.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in list_count [OO Z, IO(II Z), OO Z, IO Z].} donnera \lstinline{4}.
+% Concaténation de listes
+\section{La concaténation de deux listes}
+La concaténation de deux listes a été définit comme suit :
+\begin{lstlisting}
+Fixpoint concat_list {A:Type}(l1 l2:clist A): clist A :=
+  match l1 with
+  | nil => l2
+  | cons n l' => cons n (concat_list l' l2)
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+La concaténation de deux listes, c'est :
+\begin{itemize}
+\item Si la première liste est vide, c'est simplement la deuxième liste.
+\item Si la première liste est la construction d'un élément avec une sous liste, alors on construit un liste avec l'élément et la concaténation de la sous-liste avec la deuxième liste.
+\end{itemize}
+Dans la suite, nous noterons la concaténation \lstinline{++}. C'est à dire qu'au lieu de marquer \lstinline{(concat_list x y)}, nous noterons \lstinline{x ++ y}.
+
+Ainsi, le code \lstinline{Eval compute in [OO Z,IO Z] ++ [OI Z,II Z].} donnera \lstinline{[OO Z,IO Z,OI Z,II Z]}.
+% Récup' élém' dans liste ------------
+\section{Récupération d'élément dans une liste}
+Nous avons définit une fonction qui permet de récupérer un élément dans une liste :
+\begin{lstlisting}
+Fixpoint get_list_elm {A:Type}(l:clist A)(n:nat): option :=
+  match l, n with
+  | nil, _ => None
+  | cons x l', 0 => Some x
+  | cons x l', S n' => get_list_elm l' n'
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+L'élément récupéré dans la liste à la position \lstinline{n}, c'est :
+\begin{itemize}
+\item Si la liste est vide, rien.
+\item Si l'index est à \lstinline{0}, c'est l'élément sur lequel on est.
+\item Sinon, c'est l'élément récupéré dans le reste de la liste à la position \lstinline{n - 1}
+\end{itemize}
+Dans cette fonction, nous avons utilisé des options, c'est à dire que s'il n'y a pas de valeur à renvoyé, nous renvoyons \lstinline{None}, sinon, nous renvoyons le résultat (\lstinline{x}) sous la forme \lstinline{Some x}. Ce résultat ne correspond pas au type recherché (que ce soit un entier ou une région), pour extraire l'élément voulu (\lstinline{x}) de \lstinline{Some x}, on utilise la fonction suivante :
+\begin{lstlisting}
+Definition option_elim {A:Type} (default: A) (opt: option): A :=
+  match opt with
+  | Some n' => n'
+  | None => default
+  end. 
+\end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si l'option est de la forme \lstinline{Some n}, on renvoie \lstinline{n}
+\item Si c'est \lstinline{None}, on renvoie la valeur par défaut passée en argument.
+\end{itemize}
+Afin d'alléger le code, nous avons défini une fonction qui extrait directement la région obtenue via \lstinline{get_list_elm}. Cette fonction renvoie la région vide si l'élément n'a pas été trouvé :
+\begin{lstlisting}
+Definition get_list_reg (l:clist region)(n:nat): region := option_elim Z (get_list_elm l n).
+\end{lstlisting}
+Ainsi, le code \lstinline{Eval compute in get_list_reg [OO Z,IO Z,II Z] 2.} donnera \lstinline{II Z}.
+% Région dans liste ? -------------
+\section{Présence d'une région dans une liste}
+Nous avons déterminé une fonction qui vérifie si une région se trouve dans une liste de région donnée.
+\begin{lstlisting}
+Fixpoint is_in_list (l:clist region)(x:region): bool :=
+  match l with
+  | nil => false
+  | cons n l' => if equal_region x n then
+                  true
+                 else
+                  is_in_list l' x
+  end.
+\end{lstlisting}
+Cette fonction ne s'applique qu'aux régions et listes de régions car nous n'avons pu créer une égalité pour des types polymorphe.
+\paragraph{Explication :}
+\begin{itemize}
+\item Si la liste est vide, l'élément recherché n'est pas dans la liste.
+\item Si la liste contient au moins une élément :
+	\begin{itemize}
+	\item Soit c'est bien l'élément qu'on recherche, alors l'élément est bien dans la liste.
+	\item Soit on continue la recherche dans le reste de la liste.
+	\end{itemize}
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in is_in_list [OO Z,OI Z,IO Z] (II Z).} renverra \lstinline{false} et 	le code \lstinline{Eval compute in is_in_list [OO Z,OI Z,IO Z] (IO Z).} renverra \lstinline{true}.
+\newpage
+% Index région ----------
+\section{Position d'une région dans une liste}
+Nous avons définit une fonction qui permet de determiner la position (l'index) d'une région dans une liste :
+\begin{lstlisting}
+Fixpoint get_row_region (l:clist region)(x:region): option :=
+  match l with
+  | nil => None
+  | cons n l' => if equal_region x n then
+                   Some 0
+                 else
+                   add_opt (Some 1) (get_row_region l' x)
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+Pour la recherche de l'emplacement d'une région dans une liste, on procède de la façon suivante :
+\begin{itemize}
+\item Si la liste est vide, la région n'est pas présente dans la liste.
+\item Sinon :
+	\begin{itemize}
+	\item Si la première région de la liste est égale à la région recherchée, alors on renvoie \lstinline{0}
+	\item Sinon, on refait une recherche dans le reste de la liste et on ajoute 1 au résultat trouvé.
+	\end{itemize}
+\end{itemize}
+Nous n'avons pas fait d'arithmétique directement sur les entiers mais sur des \lstinline{option nat}. En effet, nous avons définit la fonction suivante :
+\begin{lstlisting}
+Definition add_opt (a b:@option nat):@option nat :=
+  match a, b with
+  | Some a', Some b' => Some (a'+b')
+  | _, _ => None
+  end.
+\end{lstlisting}
+\paragraph{Explication :} Si deux \lstinline{option nat} sont de la forme \lstinline{Some x}, on en sort un nouvel \lstinline{option nat} dont l'entier est la somme des deux entiers. Dans tous les autres cas, on renvoie \lstinline{None}.
+
+Ainsi, \lstinline{Eval compute in add_opt (Some 3) (Some 4).} renverra \lstinline{Some 7}.\\
+Nous avons donc pu facilement additionner les retours de \lstinline{get_row_region}.
+
+Ainsi, \lstinline{Eval compute in get_row_region [OO Z, IO Z, II Z] (II Z).} renverra \lstinline{2}.
+\newpage
+% Égalité de liste ----------
+\section{Comparaison : listes égales}
+Nous avons définit une fonction qui détermine si deux listes sont égales ou non de la façon suivante :
+\begin{lstlisting}
+Fixpoint equal_list_region (l1 l2:clist region): bool :=
+  match l1, l2 with 
+  | nil, nil => true
+  | cons x1 l1', cons x2 l2' => if (equal_region x1 x2) then
+                                  equal_list_region l1' l2' else false
+  | _, _ => false
+end.
+\end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si les deux listes sont vides, elles sont égales.
+\item Si les deux listes ont au moins un élément, on compare le premier élément de chaque liste :
+	\begin{itemize}
+	\item Si les deux sont égaux, on compare le reste de la liste.
+	\item Sinon, les deux listes ne sont pas égales.
+	\end{itemize}
+\item Dans tous les autres cas, les deux listes ne sont pas égales.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z, II Z].} renverra \lstinline{false} tandis que \lstinline{Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z].} renverra \lstinline{true}.
+\chapter{Les matrices de région}
+La troisième représentation des régions est sous forme matricielle. En effet, selon la thèse, c'est l'une des représentation de l'organisation des régions.\\
+\section{Des listes de liste}
+Pour pouvoir arriver à une représentation des matrices, nous devons d'abord définir des listes de liste.
+\begin{lstlisting}
+Inductive listlist (A:Type) : Type :=
+  | lnil : listlist A
+  | lcons : clist A -> listlist A -> listlist A.
+\end{lstlisting}
+\end{document}

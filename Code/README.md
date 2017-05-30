@@ -20,7 +20,7 @@ Les matrices de régions permettent de représenter le partitionnement du plan d
 ### Dates et conditions de rendu
 
 * Lundi 05 juin à 9h: rendre le code, le rapport ainsi que la presentation orale. 
-* Soutenance le 5, 6 ou 7 juin l'après-midi
+* Soutenance le 6 juin à 14h
 * Le rapport doit contenir entre 10 et 15 pages et la présentation environ 15 pages.
 * Style imposé pour le rendu Latex: beamer.
 
