@@ -681,15 +681,37 @@ La concaténation verticale de deux \lstinline{listlist} :
 \end{itemize}
 % Les matrices ----------
 \section{Les matrices}
-Une matrice, c'est une \lstinline{listlist} dont toutes les colonnes sont égales. Nous avons donc définit une fonction qui vérifie si une liste de liste est bien une matrice :
+\subsection{Vérification : est-ce une matrice ?} %%%%%%%%%%%%%%%
+Une matrice, c'est une \lstinline{listlist} dont toutes les colonnes sont de taille égale. Nous avons donc définit une fonction qui vérifie si une liste de liste est bien une matrice :
 \begin{lstlisting}
 Fixpoint is_matrix {A:Type}(m:listlist A) : bool :=
-match m with
-| lnil => true
-| lcons l m' => match m' with
-                | lnil => true
-                | lcons l' m'' => Nat.eqb (list_count l) (list_count l') && is_matrix m''
-                end
-end.
+  match m with
+  | lnil => true
+  | lcons l m' => match m' with
+                  | lnil => true
+                  | lcons l' m'' => Nat.eqb (list_count l) (list_count l')
+                                    && is_matrix m''
+                  end
+  end.
 \end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si la \lstinline{listlist} est vide, alors c'est une matrice.
+\item Si la \lstinline{listlist} est la construction d'une \lstinline{clist} et d'une sous \lstinline{listlist} :
+	\begin{itemize}
+	\item Si cette sous \lstinline{listlist} est vide, alors la \lstinline{listlist} est une matrice.
+	\item Si cette sous \lstinline{listlist} est la construction d'une \lstinline{clist} et d'une sous \lstinline{listlist}, alors on vérfie si cette \lstinline{clist} et la première sont égales et si la sous \lstinline{listlist} est une matrice.
+	\end{itemize}
+\end{itemize}
+\subsection{Vérification : est-ce une matrice carrée ?} %%%%%%%%%%%%%
+Nous avons ensuite définit une fonction qui vérifie si une liste de liste est une matrice carrée :
+\begin{lstlisting}
+Definition is_square_matrix {A:Type}(m:listlist A) : bool :=
+  match m with
+  | lnil => true
+  | lcons l' m' => (is_matrix m) && (Nat.eqb (list_count l') (mat_count m))
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+Si la liste de liste est vide, alors c'est une matrice carrée. Sinon, c'est une matrice carrée si la \lstinline{listlist} est une matrice et que son nombre de ligne est égale à son nombre de colonne. C'est à dire que la taille la \lstinline{listlist} est égale à la taille d'une des \lstinline{clist}.
 \end{document}
