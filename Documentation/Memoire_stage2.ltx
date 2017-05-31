@@ -467,7 +467,7 @@ La taille d'une liste c'est :
 \end{itemize}
 \vspace{\baselineskip}
 Ainsi, le code \lstinline{Eval compute in list_count [OO Z, IO(II Z), OO Z, IO Z].} donnera \lstinline{4}.
-% Concaténation de listes
+% Concaténation de listes ------------
 \section{La concaténation de deux listes}
 La concaténation de deux listes a été définit comme suit :
 \begin{lstlisting}
@@ -610,13 +610,86 @@ end.
 \end{itemize}
 \vspace{\baselineskip}
 Ainsi, le code \lstinline{Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z, II Z].} renverra \lstinline{false} tandis que \lstinline{Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z].} renverra \lstinline{true}.
+% Matrices ----------------------------------------
 \chapter{Les matrices de région}
 La troisième représentation des régions est sous forme matricielle. En effet, selon la thèse, c'est l'une des représentation de l'organisation des régions.\\
+% Liste de liste -------------
 \section{Des listes de liste}
+\subsection{Définition}
 Pour pouvoir arriver à une représentation des matrices, nous devons d'abord définir des listes de liste.
 \begin{lstlisting}
 Inductive listlist (A:Type) : Type :=
   | lnil : listlist A
   | lcons : clist A -> listlist A -> listlist A.
+\end{lstlisting}
+\paragraph{Explication :}
+Une liste de liste, c'est :
+\begin{itemize}
+\item Soit une liste vide. C'est une liste qui ne contient aucune liste.
+\item Soit soit la construction d'une liste de type \lstinline{clist} avec une liste de liste (de type \lstinline{listlist}).
+\end{itemize}
+\newpage
+% Nombre de colonne --
+\subsection{Nombre de colonne}
+Nous avons ensuite définit le nombre de colonne d'une \lstinline{listlist}, c'est à dire le nombre de \lstinline{clist} que contient la \lstinline{listlist}.
+\begin{lstlisting}
+Fixpoint mat_count {A:Type}(m:listlist A): nat :=
+  match m with
+  | lnil => 0
+  | lcons _ m' => 1 + mat_count m'
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+Le nombre de colonne d'une \lstinline{listlist}, c'est :
+\begin{itemize}
+\item Si la \lstinline{listlist} est vide, \lstinline{0}.
+\item Si la \lstinline{listlist} est composée d'une \lstinline{clist} et d'une sous \lstinline{listlist}, \lstinline{1} plus le nombre de colonne de la sous \lstinline{listlist}.
+\end{itemize}
+% Concaténation --
+\subsection{La concaténation de \lstinline{listlist}}
+Nous avons définit deux fonctions de concaténation de \lstinline{listlist}.
+\subsubsection{Concaténation horizontale}
+La première est la concaténation horizontale, c'est à dire qu'on ajoute les colonnes de la seconde \lstinline{listlist} à la suite des colonnes de la première \lstinline{listlist}.
+\begin{lstlisting}
+Fixpoint horcat {A:Type}(l1 l2:listlist A): listlist A :=
+  match l1 with
+  | lnil => l2
+  | lcons v l' => lcons v (horcat l' l2)
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+La concaténation horizontale de deux \lstinline{listlist} :
+\begin{itemize}
+\item Si la première \lstinline{listlist} est vide, c'est la seconde \lstinline{listlist}.
+\item Si la première \lstinline{listlist} est composée d'une \lstinline{clist} et d'une sous \lstinline{listlist}, on construit une nouvelle \lstinline{listlist} avec la \lstinline{clist} et la concaténation de la sous \lstinline{listlist} avec la seconde \lstinline{listlist}.
+\end{itemize}
+\subsubsection{Concaténation verticale}
+La seconde concaténation est la concaténation verticale, c'est à dire qu'on ajoute les lignes de la seconde \lstinline{listlist} à la suite des lignes de la première \lstinline{listlist}.
+\begin{lstlisting}
+Fixpoint vertcat {A:Type}(m1 m2:listlist A): listlist A :=
+  match m1, m2 with
+  | lcons l1 m1', lcons l2 m2' => lcons (l1 ++ l2) (vertcat m1' m2')
+  | lnil, _ => m2
+  | _, lnil => m1
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+La concaténation verticale de deux \lstinline{listlist} :
+\begin{itemize}
+\item Si l'une des deux \lstinline{listlist} est vide, c'est l'autre \lstinline{listlist}.
+\item Si les deux sont composées d'une \lstinline{clist} et d'une sous \lstinline{listlist}, on construit une nouvelle \lstinline{listlist} avec la concaténation des deux \lstinline{clist} et la concaténation verticale des deux sous \lstinline{listlist}.
+\end{itemize}
+% Les matrices ----------
+\section{Les matrices}
+Une matrice, c'est une \lstinline{listlist} dont toutes les colonnes sont égales. Nous avons donc définit une fonction qui vérifie si une liste de liste est bien une matrice :
+\begin{lstlisting}
+Fixpoint is_matrix {A:Type}(m:listlist A) : bool :=
+match m with
+| lnil => true
+| lcons l m' => match m' with
+                | lnil => true
+                | lcons l' m'' => Nat.eqb (list_count l) (list_count l') && is_matrix m''
+                end
+end.
 \end{lstlisting}
 \end{document}
