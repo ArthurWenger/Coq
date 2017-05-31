@@ -197,7 +197,7 @@ Ainsi, nous avons une modélisation d'une région. On peut alors faire diverse fon
 % Niveau de région ----------
 \section{Le niveau d'une région}
 \subsection{Calcule du niveau d'une région}
-Pour calculer le niveau d'une région, nous avons définit la fonction suivante :
+Pour calculer le niveau d'une région, nous avons défini la fonction suivante :
 \begin{lstlisting}
 Fixpoint rank (n:region) : nat :=
     match n with
@@ -214,7 +214,7 @@ Le niveau d'une région, c'est :
 \vspace{\baselineskip}
 Ainsi, le code \lstinline{Eval compute in rank (II (OI Z)).} nous donne bien \lstinline{2}.
 \subsection{Obtenir une région d'un certain niveau}
-Pour obtenir une région de niveau \lstinline{n} contenant la région \lstinline{r}, nous avons définit la fonction suivante :
+Pour obtenir une région de niveau \lstinline{n} contenant la région \lstinline{r}, nous avons défini la fonction suivante :
 \begin{lstlisting}
 Fixpoint region_at_rank (r:region) (n:nat) : region :=
     if Nat.eqb (rank r) n || Nat.eqb (rank r) 1 then
@@ -239,7 +239,7 @@ Si on est dans aucun de ces cas là, la région de niveau \lstinline{n} contenant 
 \vspace{\baselineskip}
 Ainsi, le code \lstinline{Eval compute in region_at_rank (OO (II (OI Z))) 2.} nous donne bien \lstinline{(II (OI Z))}.
 \subsection{Comparaison : Niveaux égaux}
-Nous avons définit une fonction qui compare si deux régions ont le même niveau :
+Nous avons défini une fonction qui compare si deux régions ont le même niveau :
 \begin{lstlisting}
 Fixpoint same_rank (n1 n2 : region) : bool :=
     rank (n1) == rank (n2).
@@ -247,7 +247,7 @@ Fixpoint same_rank (n1 n2 : region) : bool :=
 Ainsi, le code \lstinline{Eval compute in same_rank (II(OI(OO Z))) (OO(II(II Z))).} nous donne bien \lstinline{true}.
 %Région  égale -----------
 \section{Comparaison : Régions égales}
-Nous avons définit une fonction pour déterminer si deux régions sont égales ou non :
+Nous avons défini une fonction pour déterminer si deux régions sont égales ou non :
 \begin{lstlisting}
 Fixpoint equal_region (n m : region) : bool :=
     match n, m with
@@ -269,7 +269,7 @@ Fixpoint equal_region (n m : region) : bool :=
 Ainsi, le code \lstinline{Eval compute in equal_region (II(OI(OO Z))) (OO(II(II Z))).} renverra \lstinline{false} tandis que le code \lstinline{Eval compute in equal_region (II(OI(OO Z))) (II(OI(OO Z))).} renverra \lstinline{true}.
 %Première région -----------
 \section{Première région}
-Nous avons définit une fonction qui détermine la première région d'une région donnée, c'est à dire la région de niveau 1 qui contient la région donnée.
+Nous avons défini une fonction qui détermine la première région d'une région donnée, c'est à dire la région de niveau 1 qui contient la région donnée.
 \begin{lstlisting}
 Fixpoint first_region (n : region) : region :=
     match rank n with
@@ -296,7 +296,7 @@ Fixpoint first_region (n : region) : region :=
 Ainsi, le code \lstinline{Eval compute in first_region (II(OI(OO Z))).} nous donne comme résultat\lstinline{(OO Z)}.
 %Dernière région -----------
 \section{Dernière région}
-Nous avons définit une fonction qui détermine la dernière région d'une région donné, c'est à dire la région fille de plus haut niveau.
+Nous avons défini une fonction qui détermine la dernière région d'une région donné, c'est à dire la région fille de plus haut niveau.
 \begin{lstlisting}
 Fixpoint last_region (n : region) : region :=
     match n with 
@@ -317,7 +317,7 @@ Ainsi, le code \lstinline{Eval compute in last_region (II(OI(OO Z))).} nous donn
 %Hiérarchie -------------------------------------
 \chapter{Les hiérarchies de régions}
 \section{Définition}
-La première représentation des ensembles de régions que nous avons choisie est la forme hiérarchique. Nous l'avons définit comme suit :
+La première représentation des ensembles de régions que nous avons choisie est la forme hiérarchique. Nous l'avons défini comme suit :
 
 \begin{lstlisting}
 Inductive treeRegion :=
@@ -356,11 +356,11 @@ Ici, il faut lire que la région \lstinline{(OO Z)} est la region mère des région
 
 Dans la suite, nous utiliserons ce graphe comme référence dans les exemples.
 \paragraph{}
-Maintenant que nous avons définit la hiérarchie en arbre des régions, nous pouvons définir différentes fonctions sur celle-ci.
+Maintenant que nous avons défini la hiérarchie en arbre des régions, nous pouvons définir différentes fonctions sur celle-ci.
 \newpage
 % Hauteur de l'arbre ---------------
 \section{La hauteur de l'arbre}
-Pour calculer la hauteur d'un arbre, nous avons définit la fonction suivante :
+Pour calculer la hauteur d'un arbre, nous avons défini la fonction suivante :
 \begin{lstlisting}
 Fixpoint height (m : t) : nat :=
   match m with
@@ -379,7 +379,7 @@ La hauteur d'un arbre, c'est :
 Ainsi, la fonction appliquée à notre arbre précédent renverra \lstinline{2}.
 % Cardinal de l'arbre -----------
 \section{Le cardinal de l'arbre}
-Pour calculer le cardinal d'un arbre, nous avons définit la fonction suivante :
+Pour calculer le cardinal d'un arbre, nous avons défini la fonction suivante :
 \begin{lstlisting}
 Fixpoint cardinal (m : t) : nat :=
   match m with
@@ -398,7 +398,7 @@ Ainsi, la fonction appliquée à notre arbre précédent renverra \lstinline{9}.
 \newpage
 % Nombre de feuille ---------------
 \section{Le nombre de feuille de l'arbre}
-Pour calculer le nombre de feuille d'un arbre, nous avons définit la fonction suivante :
+Pour calculer le nombre de feuille d'un arbre, nous avons défini la fonction suivante :
 \begin{lstlisting}
 Fixpoint cardinal_leaf (m : t) : nat :=
   match m with
@@ -419,7 +419,7 @@ Ainsi, la fonction appliquée à notre arbre précédent renverra \lstinline{7}.
 \chapter{Les listes de région}
 \section{Définition d'une liste}
 La deuxième représentation d'ensemble de régions que nous avons choisis est sous forme de liste.
-Pour cela, nous avons définit un type \lstinline{clist}, qui construit des listes de n'importe quel type :
+Pour cela, nous avons défini un type \lstinline{clist}, qui construit des listes de n'importe quel type :
 \begin{lstlisting}
 Inductive clist (A:Type): Type :=
   | nil : clist A
@@ -433,7 +433,7 @@ Une liste, c'est :
 \item Soit un élément associé à une sous-liste.
 \end{itemize}
 \paragraph{Notation :}
-Afin de faciliter l'écriture nous avons définit des notations standards, ainsi :
+Afin de faciliter l'écriture nous avons défini des notations standards, ainsi :
 \begin{itemize}
 \item \lstinline{(cons x l)} se notera \lstinline{x :: l}
 \item \lstinline{(cons x .. (cons y nil) ..)} se notera \lstinline{[ x , .. , y ]}
@@ -448,10 +448,10 @@ Une liste de région \lstinline{(clist region)} :
 \begin{lstlisting}
 [OO Z, IO (OO Z), IO Z, OI (IO Z)]
 \end{lstlisting}
-Maintenant que les listes sont définit, on verra quelques fonctions utiles sur les listes.
+Maintenant que les listes sont définies, on verra quelques fonctions utiles sur les listes.
 % La taille de liste --------
 \section{La taillle d'une liste}
-Nous avons définit une fonction qui compte le nombre d'élément d'une liste :
+Nous avons défini une fonction qui compte le nombre d'élément d'une liste :
 \begin{lstlisting}
 Fixpoint list_count {A:Type} (l:clist A) : nat := 
   match l with
@@ -469,7 +469,7 @@ La taille d'une liste c'est :
 Ainsi, le code \lstinline{Eval compute in list_count [OO Z, IO(II Z), OO Z, IO Z].} donnera \lstinline{4}.
 % Concaténation de listes ------------
 \section{La concaténation de deux listes}
-La concaténation de deux listes a été définit comme suit :
+La concaténation de deux listes a été définie comme suit :
 \begin{lstlisting}
 Fixpoint concat_list {A:Type}(l1 l2:clist A): clist A :=
   match l1 with
@@ -488,7 +488,7 @@ Dans la suite, nous noterons la concaténation \lstinline{++}. C'est à dire qu'au
 Ainsi, le code \lstinline{Eval compute in [OO Z,IO Z] ++ [OI Z,II Z].} donnera \lstinline{[OO Z,IO Z,OI Z,II Z]}.
 % Récup' élém' dans liste ------------
 \section{Récupération d'élément dans une liste}
-Nous avons définit une fonction qui permet de récupérer un élément dans une liste :
+Nous avons défini une fonction qui permet de récupérer un élément dans une liste :
 \begin{lstlisting}
 Fixpoint get_list_elm {A:Type}(l:clist A)(n:nat): option :=
   match l, n with
@@ -550,7 +550,7 @@ Ainsi, le code \lstinline{Eval compute in is_in_list [OO Z,OI Z,IO Z] (II Z).} r
 \newpage
 % Index région ----------
 \section{Position d'une région dans une liste}
-Nous avons définit une fonction qui permet de determiner la position (l'index) d'une région dans une liste :
+Nous avons défini une fonction qui permet de determiner la position (l'index) d'une région dans une liste :
 \begin{lstlisting}
 Fixpoint get_row_region (l:clist region)(x:region): option :=
   match l with
@@ -571,7 +571,7 @@ Pour la recherche de l'emplacement d'une région dans une liste, on procède de la
 	\item Sinon, on refait une recherche dans le reste de la liste et on ajoute 1 au résultat trouvé.
 	\end{itemize}
 \end{itemize}
-Nous n'avons pas fait d'arithmétique directement sur les entiers mais sur des \lstinline{option nat}. En effet, nous avons définit la fonction suivante :
+Nous n'avons pas fait d'arithmétique directement sur les entiers mais sur des \lstinline{option nat}. En effet, nous avons défini la fonction suivante :
 \begin{lstlisting}
 Definition add_opt (a b:@option nat):@option nat :=
   match a, b with
@@ -588,7 +588,7 @@ Ainsi, \lstinline{Eval compute in get_row_region [OO Z, IO Z, II Z] (II Z).} ren
 \newpage
 % Égalité de liste ----------
 \section{Comparaison : listes égales}
-Nous avons définit une fonction qui détermine si deux listes sont égales ou non de la façon suivante :
+Nous avons défini une fonction qui détermine si deux listes sont égales ou non de la façon suivante :
 \begin{lstlisting}
 Fixpoint equal_list_region (l1 l2:clist region): bool :=
   match l1, l2 with 
@@ -631,7 +631,7 @@ Une liste de liste, c'est :
 \newpage
 % Nombre de colonne --
 \subsection{Nombre de colonne}
-Nous avons ensuite définit le nombre de colonne d'une \lstinline{listlist}, c'est à dire le nombre de \lstinline{clist} que contient la \lstinline{listlist}.
+Nous avons ensuite défini le nombre de colonne d'une \lstinline{listlist}, c'est à dire le nombre de \lstinline{clist} que contient la \lstinline{listlist}.
 \begin{lstlisting}
 Fixpoint mat_count {A:Type}(m:listlist A): nat :=
   match m with
@@ -646,8 +646,8 @@ Le nombre de colonne d'une \lstinline{listlist}, c'est :
 \item Si la \lstinline{listlist} est composée d'une \lstinline{clist} et d'une sous \lstinline{listlist}, \lstinline{1} plus le nombre de colonne de la sous \lstinline{listlist}.
 \end{itemize}
 % Concaténation --
-\subsection{La concaténation de \lstinline{listlist}}
-Nous avons définit deux fonctions de concaténation de \lstinline{listlist}.
+\subsection{La concaténation de liste de liste}
+Nous avons défini deux fonctions de concaténation de \lstinline{listlist}.
 \subsubsection{Concaténation horizontale}
 La première est la concaténation horizontale, c'est à dire qu'on ajoute les colonnes de la seconde \lstinline{listlist} à la suite des colonnes de la première \lstinline{listlist}.
 \begin{lstlisting}
@@ -682,7 +682,7 @@ La concaténation verticale de deux \lstinline{listlist} :
 % Les matrices ----------
 \section{Les matrices}
 \subsection{Vérification : est-ce une matrice ?} %%%%%%%%%%%%%%%
-Une matrice, c'est une \lstinline{listlist} dont toutes les colonnes sont de taille égale. Nous avons donc définit une fonction qui vérifie si une liste de liste est bien une matrice :
+Une matrice, c'est une \lstinline{listlist} dont toutes les colonnes sont de taille égale. Nous avons donc défini une fonction qui vérifie si une liste de liste est bien une matrice :
 \begin{lstlisting}
 Fixpoint is_matrix {A:Type}(m:listlist A) : bool :=
   match m with
@@ -704,7 +704,7 @@ Fixpoint is_matrix {A:Type}(m:listlist A) : bool :=
 	\end{itemize}
 \end{itemize}
 \subsection{Vérification : est-ce une matrice carrée ?} %%%%%%%%%%%%%
-Nous avons ensuite définit une fonction qui vérifie si une liste de liste est une matrice carrée :
+Nous avons ensuite défini une fonction qui vérifie si une liste de liste est une matrice carrée :
 \begin{lstlisting}
 Definition is_square_matrix {A:Type}(m:listlist A) : bool :=
   match m with
@@ -714,4 +714,40 @@ Definition is_square_matrix {A:Type}(m:listlist A) : bool :=
 \end{lstlisting}
 \paragraph{Explication :}
 Si la liste de liste est vide, alors c'est une matrice carrée. Sinon, c'est une matrice carrée si la \lstinline{listlist} est une matrice et que son nombre de ligne est égale à son nombre de colonne. C'est à dire que la taille la \lstinline{listlist} est égale à la taille d'une des \lstinline{clist}.
+\section{Récupération d'élément dans une liste de liste}
+\subsection{Récupération d'une colonne de liste de liste}
+Nous avons d'abord défini une fonction qui permet de récupérer une colonne d'une \lstinline{listlist} :
+\begin{lstlisting}
+Fixpoint get_col {A:Type}(m:listlist A)(n:nat): clist A :=
+  match m, n with
+  | lnil, _ => nil
+  | lcons l m', 0 => l
+  | lcons l m', S n' => get_col m' n'
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+la n\ieme\ colonne d'une \lstinline{listlist} c'est :
+\begin{itemize}
+\item Si la \lstinline{listlist} est nulle (\lstinline{lnil}), \lstinline{nil}.
+\item Sinon :
+	\begin{itemize}
+	\item Si l'index est nul, c'est la colonne sur laquelle on se trouve.
+	\item Sinon, c'est la (n-1)\ieme\ colonne dans la sous \lstinline{listlist}
+	\end{itemize}
+\end{itemize}
+\subsection{Définition}
+Grâce à la fonction précédente, nous pouvons maintenant définir une fonction qui permet de récupérer un élément dans une liste de liste :
+\begin{lstlisting}
+Fixpoint get_mat_elm {A:Type}(m:listlist A)(row:nat)(col:nat): option :=
+  get_list_elm (get_col m col) row.
+\end{lstlisting}
+\paragraph{Explication :}
+On récupère l'élément à l'emplacement \lstinline{row} de \lstinline{col}\ieme\ colonne.
+
+De même que pour la récupération d'élément dans une liste, nous utilisons des options. Nous avons donc également défini une fonction qui extrait directement une région de l'option :
+\begin{lstlisting}
+Definition get_mat_reg (m:listlist region)(row:nat)(col:nat): region :=
+  option_elim Z (get_mat_elm m row col).
+\end{lstlisting}
+\paragraph{Explication :} la région sera directement extraite de l'option récupéré par la recherche d'une région dans une \lstinline{listlist} de région. Si l'emplacement n'existe pas, l'option sera égale à \lstinline{None}, et donc notre fonction renverra la région vide.
 \end{document}
