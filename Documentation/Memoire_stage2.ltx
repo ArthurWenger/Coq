@@ -864,7 +864,7 @@ match n with
           end) n' (get_base_matrix n'))
 end.
 \end{lstlisting}
-\paragraph{Explication :} À FAIRE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\paragraph{Explication :} % À FAIRE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 \vspace{\baselineskip}
 
 Ainsi, le code \lstinline{Eval compute in mat_part_bup 2 (OO Z).} donnera
@@ -915,5 +915,22 @@ Ainsi, le code \lstinline|Eval compute in parse_mat '{[OO Z, OI Z],[IO Z, II Z]}
    [OI (IO Z), II (IO Z), OI (II Z), II (II Z)]}
 \end{lstlisting}
 \subsection{Définition}
-
+On peut désormais définir l'algorithme top-down :
+\begin{lstlisting}
+Definition mat_part_tdown (n:nat)(m:listlist region):listlist region :=
+  (fix sub(n acc:nat)(m:listlist region):listlist region :=
+     match n with
+     | O => m
+     | S n' => sub n' (acc+1) (parse_mat m acc) 
+     end) n 0 m.
+\end{lstlisting}
+\paragraph{Explication :}
+La fonction sub permet de cacher le compteur de niveau lors de l'utilisation de la fonction. Cette fonction se contente d'enchainer les \lstinline{parse_mat} sur la matrice jusqu'à obtenir une matrice de partitionnement de niveau n. \\
+Ainsi, le code \lstinline|Eval compute in mat_part_tdown 2 '{[OO Z]}.|, donnera :
+\begin{lstlisting}
+'{ [OI (OO (OO Z)), OO (OO (OO Z)), OI (IO (OO Z)), OO (IO (OO Z))],
+   [II (OO (OO Z)), IO (OO (OO Z)), II (IO (OO Z)), IO (IO (OO Z))],
+   [OI (OI (OO Z)), OO (OI (OO Z)), OI (II (OO Z)), OO (II (OO Z))],
+   [II (OI (OO Z)), IO (OI (OO Z)), II (II (OO Z)), IO (II (OO Z))]}
+\end{lstlisting}
 \end{document}
