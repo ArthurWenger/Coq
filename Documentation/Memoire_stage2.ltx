@@ -5,6 +5,7 @@
 \usepackage[francais]{babel}
 \usepackage{xcolor}
 \usepackage{graphicx}
+\usepackage{amsmath}
 \usepackage{listings}
 
 \lstdefinelanguage{Coq}{ 
@@ -612,7 +613,7 @@ end.
 Ainsi, le code \lstinline{Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z, II Z].} renverra \lstinline{false} tandis que \lstinline{Eval compute in equal_list_region [OO Z, II Z, IO Z] [OO Z, II Z, IO Z].} renverra \lstinline{true}.
 % Matrices ----------------------------------------
 \chapter{Les matrices de région}
-La troisième représentation des régions est sous forme matricielle. En effet, selon la thèse, c'est l'une des représentation de l'organisation des régions.\\
+La troisième représentation des régions est sous forme matricielle. En effet, selon la thèse, c'est l'une des représentation de l'organisation des régions.
 % Liste de liste -------------
 \section{Des listes de liste}
 \subsection{Définition}
@@ -628,7 +629,12 @@ Une liste de liste, c'est :
 \item Soit une liste vide. C'est une liste qui ne contient aucune liste.
 \item Soit soit la construction d'une liste de type \lstinline{clist} avec une liste de liste (de type \lstinline{listlist}).
 \end{itemize}
-\newpage
+\paragraph{Notation :}
+Afin de faciliter l'écriture nous avons défini des nouvelles notations ainsi :
+\begin{itemize}
+\item \lstinline{(lcons x .. (lcons y lnil) ..)} se notera \lstinline|'{ x , .. , y }|
+\item la liste de liste vide \lstinline{lnil} se notera \lstinline|'{ }|
+\end{itemize}
 % Nombre de colonne --
 \subsection{Nombre de colonne}
 Nous avons ensuite défini le nombre de colonne d'une \lstinline{listlist}, c'est à dire le nombre de \lstinline{clist} que contient la \lstinline{listlist}.
@@ -714,8 +720,9 @@ Definition is_square_matrix {A:Type}(m:listlist A) : bool :=
 \end{lstlisting}
 \paragraph{Explication :}
 Si la liste de liste est vide, alors c'est une matrice carrée. Sinon, c'est une matrice carrée si la \lstinline{listlist} est une matrice et que son nombre de ligne est égale à son nombre de colonne. C'est à dire que la taille la \lstinline{listlist} est égale à la taille d'une des \lstinline{clist}.
+% Récup élém listlist ---------
 \section{Récupération d'élément dans une liste de liste}
-\subsection{Récupération d'une colonne de liste de liste}
+\subsection{Récupération d'une colonne de liste de liste} %%%%%%%%%%%%%%%%%
 Nous avons d'abord défini une fonction qui permet de récupérer une colonne d'une \lstinline{listlist} :
 \begin{lstlisting}
 Fixpoint get_col {A:Type}(m:listlist A)(n:nat): clist A :=
@@ -735,7 +742,7 @@ la n\ieme\ colonne d'une \lstinline{listlist} c'est :
 	\item Sinon, c'est la (n-1)\ieme\ colonne dans la sous \lstinline{listlist}
 	\end{itemize}
 \end{itemize}
-\subsection{Définition}
+\subsection{Définition} %%%%%%%%%%%%%%%%%%%
 Grâce à la fonction précédente, nous pouvons maintenant définir une fonction qui permet de récupérer un élément dans une liste de liste :
 \begin{lstlisting}
 Fixpoint get_mat_elm {A:Type}(m:listlist A)(row:nat)(col:nat): option :=
@@ -744,10 +751,186 @@ Fixpoint get_mat_elm {A:Type}(m:listlist A)(row:nat)(col:nat): option :=
 \paragraph{Explication :}
 On récupère l'élément à l'emplacement \lstinline{row} de \lstinline{col}\ieme\ colonne.
 
+Afin de faciliter l'écriture, on écrira \lstinline{(get_mat_elm m r c)} de la façon suivante \lstinline{m _[ r , c ]}
+
 De même que pour la récupération d'élément dans une liste, nous utilisons des options. Nous avons donc également défini une fonction qui extrait directement une région de l'option :
 \begin{lstlisting}
 Definition get_mat_reg (m:listlist region)(row:nat)(col:nat): region :=
   option_elim Z (get_mat_elm m row col).
 \end{lstlisting}
 \paragraph{Explication :} la région sera directement extraite de l'option récupéré par la recherche d'une région dans une \lstinline{listlist} de région. Si l'emplacement n'existe pas, l'option sera égale à \lstinline{None}, et donc notre fonction renverra la région vide.
+% Partition --------------------------------------------
+\chapter{Le partitionnement}
+Maintenant que les matrices sont définies, accompagnées de plusieurs fonctions utilitaires, on va voir deux algorithmes de partitionnement des matrices : l'approche bottom-up et l'approche top-down.
+% Préfixe ----------
+\section{Ajout de préfixe...}
+Avant cela, on doit définir une fonction qui permet d'ajouter un préfixe à toutes les régions d'un ensemble. C'est à dire que tous les éléments d'une liste ou d'une matrice auront une même nouvelle région fille.
+\subsection{... à une liste} %%%%%%%%%%%%%%%%%%%%%
+\begin{lstlisting}
+Fixpoint prefix_list(r: region)(l:clist region): clist region :=
+  match l with
+  | nil => l
+  | cons n l' => cons (concat_region r n) (prefix_list r l')  
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+Quand on ajoute un préfixe à une liste :
+\begin{itemize}
+\item Si la liste est vide, il n'y a rien à faire.
+\item Si la liste est composée d'une région suivie d'une sous-liste, on construit une nouvelle liste avec la région concaténée à notre préfixe et l'ajout de préfixe à la sous-liste.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in prefix_list (II Z) [OO Z, IO Z].} renverra \lstinline{[II (OO Z), II (IO Z)]}
+\subsection{... à une matrice} %%%%%%%%%%%%%%%%%%%%%%
+\begin{lstlisting}
+Fixpoint prefix_mat(r: region)(m:listlist region): listlist region :=
+  match m with
+  | lnil => m
+  | lcons v m' => lcons (prefix_list r v) (prefix_mat r m')
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+Quand on ajoute un préfixe à une matrice :
+\begin{itemize}
+\item Si elle est vide, il n'y a rien à faire.
+\item Si elle est composée d'une liste de région suivie d'une sous-matrice, on construit une nouvelle matrice avec la liste concaténée à notre préfixe et l'ajout de préfixe à la sous-matrice.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline|Eval compute in prefix_mat (II Z) '{[OO Z, IO Z],[OI Z]}.| renverra \lstinline|'{ [II (OO Z), II (IO Z)], [II (OI Z)]}|
+% Suffixe ----------
+\section{Ajout de suffixe...}
+De façon similaire, nous avons défini deux fonctions qui ajoute des suffixes à des ensembles de région. C'est à dire que tous les éléments d'une liste ou d'une matrice auront une même nouvelle région mère.\\
+Les définitions sont quasiment identique. La seule chose qui change, c'est l'ordre dans lequel on concatène le suffixe à une région.
+\subsection{... à une liste} %%%%%%%%%%%%%%%%%%%%%
+\begin{lstlisting}
+Fixpoint suffix_list(r: region)(l:clist region): clist region :=
+  match l with
+  | nil => l
+  | cons n l' => cons (concat_region n r) (suffix_list r l')  
+  end.
+\end{lstlisting}
+\subsection{... à une matrice} %%%%%%%%%%%%%%%%%%%%%
+\begin{lstlisting}
+Fixpoint suffix_mat(r: region)(m:listlist region): listlist region :=
+  match m with
+  | lnil => m
+  | lcons v m' => lcons (suffix_list r v) (suffix_mat r m')
+  end.
+\end{lstlisting}
+\section{La rotation des régions}
+Nous avons ensuite défini une petite fonction qui détermine le numéro local d'une région selon son niveau et son emplacement :
+\begin{lstlisting}
+Definition rot_nat (n : nat) : region -> region :=
+  match n mod 4 with
+  | 0 => OO
+  | 1 => OI
+  | 2 => II
+  | 3 => IO
+  | _ => OO
+  end.
+\end{lstlisting}
+Cette définition correspond à la fonction f(x) de la partie partionnement de la fiche.
+\section{Matrice de base}
+Afin d'appliquer correctement l'algorithme de partitionnement, nous devons définir une fonction qui crée une matrice de base selon un niveau donné. C'est à dire une matrice carrée de dimension 2 définie de la façon suivante : \\
+\[
+\begin{pmatrix}
+	f(n) & f(n + 1) \\
+	f(n + 3) & f(n + 2)
+\end{pmatrix}
+\]
+Avec \(f\) qui correspond à \lstinline{rot_nat} et \(n\) qui correspond au niveau de la région :
+\begin{lstlisting}
+Definition get_base_matrix(n:nat) : listlist region := 
+'{[ (rot_nat n) Z, rot_nat (n+3) Z ], [(rot_nat (n+1)) Z, (rot_nat (n+2)) Z ] }.
+\end{lstlisting}
+\section{L'algorithme bottom-up}
+Maintenant que nous avons notre matrice de base, nous pouvons élaborer l'algorithme bottom-up.
+\paragraph{En quoi consiste cet algorithme ?} Le principe de cet algorithme est de partir d'une matrice de base de niveau n, puis de construire une matrice de base de niveau n-1 et de concaténer chacune de ses régions à la matrice de base de niveau n. On obtient ainsi une nouvelle matrice qui contient 4 fois plus d'éléments. Ensuite on réitère l'opération en construisant une matrice de base de niveau n-2 et en concaténant notre précédente matrice à chacune de ses quatre régions. On répète l'opération n fois au total, ce qui nous donne à la fin la matrice de partitionnement de niveau n.
+\subsection{Définition}
+Nous avons défini l'implémentation de la façon suivante :
+\begin{lstlisting}
+Definition mat_part_bup (n:nat)(r: region):listlist region :=
+match n with
+| O => '{[r]}
+| S n' => suffix_mat r ((fix from_n_to_0 (n:nat)(m:listlist region):listlist region :=
+          match n with
+          | O => m
+          | S n' => let base := get_base_matrix n' in (
+                    from_n_to_0 n' (
+                    vertcat (horcat (suffix_mat (option_elim Z (base _[0,0])) m)
+                             (suffix_mat (option_elim Z (base _[0,1])) m ))
+                             (horcat (suffix_mat (option_elim Z (base _[1,0])) m)
+                             (suffix_mat (option_elim Z (base _[1,1])) m ))) )
+          end) n' (get_base_matrix n'))
+end.
+\end{lstlisting}
+\paragraph{Explication :} % À FAIRE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\vspace{\baselineskip}
+
+Ainsi, le code \lstinline{Eval compute in mat_part_bup 2 (OO Z).} donnera
+\begin{lstlisting}
+'{ [OI (OO (OO Z)), OO (OO (OO Z)), OI (IO (OO Z)), OO (IO (OO Z))],
+   [II (OO (OO Z)), IO (OO (OO Z)), II (IO (OO Z)), IO (IO (OO Z))],
+   [OI (OI (OO Z)), OO (OI (OO Z)), OI (II (OO Z)), OO (II (OO Z))],
+   [II (OI (OO Z)), IO (OI (OO Z)), II (II (OO Z)), IO (II (OO Z))]}
+\end{lstlisting}
+\section{l'algorithme top-down}
+\paragraph{En quoi consiste cet algorithme ?} Cet algorithme part d'une matrice de niveau n. On construit ensuite une matrice de base de niveau n + 1 et on la concatène à chacun des éléments de notre matrice précédente. On commence à 0 puis on applique l'algorithme autant de fois qu'on le souhaite pour obtenir notre matrice de partitionnement.
+\subsection{De liste à matrice}
+Pour mettre en place cet algorithme, nous devons d'abord définir une fonction qui permet de créer une matrice à partir d'une liste et d'un niveau donné :
+\begin{lstlisting}
+Fixpoint parse_list (l:clist region)(n:nat): listlist region :=
+match l with
+| nil => lnil
+| cons r l' => vertcat (suffix_mat r (get_base_matrix n)) (parse_list l' n)
+end.
+\end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si la liste est vide, on renvoie une matrice vide.
+\item Si la liste est composé d'un élément et d'une sous-liste, on concatène l'élément à une matrice de base de niveau donné, et on concatène cette nouvelle matrice à l'application de la fonction sur la sous-liste.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline{Eval compute in parse_list [OO (OO Z)] 0.} donnera\\ \lstinline|'{ [OO (OO (OO Z)), IO (OO (OO Z))], [OI (OO (OO Z)), II (OO (OO Z))]}|
+\subsection{De partitionnement n à n+1}
+Grâce à la fonction précédemment définie, nous pouvons définir une fonction qui permet de passer d'une matrice de partitionnement n à une matrice de partitionnement de niveau n+1 :
+\begin{lstlisting}
+Fixpoint parse_mat (m:listlist region)(n:nat): listlist region :=
+  match m with
+  | lnil => lnil
+  | lcons v m' => horcat (parse_list v n) (parse_mat m' n)
+  end.
+\end{lstlisting}
+\paragraph{Explication :}
+\begin{itemize}
+\item Si la matrice est vide, on renvoie une matrice vide.
+\item Si la matrice est composée d'une liste et d'une sous-matrice, On transforme la liste en matrice via la fonction précédente puis on réitère la fonction sur la sous-matrice.
+\end{itemize}
+\vspace{\baselineskip}
+Ainsi, le code \lstinline|Eval compute in parse_mat '{[OO Z, OI Z],[IO Z, II Z]} 0.| donnera :
+\begin{lstlisting}
+'{ [OO (OO Z), IO (OO Z), OO (OI Z), IO (OI Z)],
+   [OI (OO Z), II (OO Z), OI (OI Z), II (OI Z)],
+   [OO (IO Z), IO (IO Z), OO (II Z), IO (II Z)],
+   [OI (IO Z), II (IO Z), OI (II Z), II (II Z)]}
+\end{lstlisting}
+\subsection{Définition}
+On peut désormais définir l'algorithme top-down :
+\begin{lstlisting}
+Definition mat_part_tdown (n:nat)(m:listlist region):listlist region :=
+  (fix sub(n acc:nat)(m:listlist region):listlist region :=
+     match n with
+     | O => m
+     | S n' => sub n' (acc+1) (parse_mat m acc) 
+     end) n 0 m.
+\end{lstlisting}
+\paragraph{Explication :}
+La fonction sub permet de cacher le compteur de niveau lors de l'utilisation de la fonction. Cette fonction se contente d'enchainer les \lstinline{parse_mat} sur la matrice jusqu'à obtenir une matrice de partitionnement de niveau n. \\
+Ainsi, le code \lstinline|Eval compute in mat_part_tdown 2 '{[OO Z]}.|, donnera :
+\begin{lstlisting}
+'{ [OI (OO (OO Z)), OO (OO (OO Z)), OI (IO (OO Z)), OO (IO (OO Z))],
+   [II (OO (OO Z)), IO (OO (OO Z)), II (IO (OO Z)), IO (IO (OO Z))],
+   [OI (OI (OO Z)), OO (OI (OO Z)), OI (II (OO Z)), OO (II (OO Z))],
+   [II (OI (OO Z)), IO (OI (OO Z)), II (II (OO Z)), IO (II (OO Z))]}
+\end{lstlisting}
 \end{document}
