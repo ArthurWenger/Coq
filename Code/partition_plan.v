@@ -237,6 +237,8 @@ else nil.
 
 Eval compute in voisins_mat '{[OO Z, II Z, OO Z],[II Z, OI Z, OO Z], [II Z, OO Z, II Z]} (OI Z).
 
+Definition est_voisin (r1 r2:region)(m:listlist region): bool := 
+is_in_list (voisins_mat m r1) r2.
 
 Definition diff (n m:nat): nat :=
 if (n<?m) then m-n
