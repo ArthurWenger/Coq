@@ -43,18 +43,13 @@ match m with
 | lnil => true
 | lcons l m' => match m' with
                 | lnil => true
-                | lcons l' m'' => Nat.eqb (list_count l) (list_count l') && is_matrix m''
+                | lcons l' m'' => Nat.eqb (list_count l) (list_count l') && is_matrix m'
                 end
 end.
 
-(* Fixpoint is_matrix_bis {A:Type}(m:listlist A) : bool.
-case_eq m. intro H. exact true.
-intros. pose (e := list_count c).
-case_eq l. intro H0. exact true.
-intros. exact (Nat.eqb e (list_count c0) && (is_matrix_bis A l0)).
-Qed. *)
+
 (* OLD
-  Definition is_matrix {A:Type}(m:listlist A) : bool :=
+  Definition is_matrix_bis {A:Type}(m:listlist A) : bool :=
   let compare_first_list_count := 
   (fix sub (m:listlist A)(first_list_count:nat) : bool := 
     match m with
@@ -68,6 +63,14 @@ Qed. *)
   | lnil => true
   | lcons l' m' => compare_first_list_count m' (list_count l')
   end. *)
+
+  (* Alternativement:
+     Fixpoint is_matrix_bisbis {A:Type}(m:listlist A) : bool.
+        case_eq m. intro H. exact true.
+        intros. pose (e := list_count c).
+        case_eq l. intro H0. exact true.
+        intros. exact (Nat.eqb e (list_count c0) && (is_matrix_bis A l0)).
+        Qed. *)
   
 Definition is_square_matrix {A:Type}(m:listlist A) : bool :=
 match m with
@@ -180,6 +183,7 @@ Eval compute in vertcat '{[OO Z,OI Z],[II Z]} '{[IO Z]}.
     end. *)
 
 Eval compute in is_matrix '{[OO Z, II Z],[OO Z, II Z]}.
+Eval compute in is_matrix '{[1, 1],[2,2],[3,3,3],[4,4,4]}.
 Eval compute in is_square_matrix '{[]}.
 Eval compute in is_square_matrix '{[1,2]}.
 Eval compute in is_square_matrix '{[OO Z]}.
