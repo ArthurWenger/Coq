@@ -23,13 +23,7 @@ Definition graph:= netnode -> netnode -> bool.
    L'appartenance d'un noeud à une region est representé par une fonction booléenne. *)
 Definition loc_geo := region -> netnode -> bool.
 
-Locate "{".
 (* Notation "{ x : A  |  P }" := (sig A (fun x => P)) (at level 0, x at level 99). *)
-
-(* Chaque region contient au moins un noeud *)
-Theorem no_empty_region :
-  forall (r : region) (l:loc_geo), rank r <= max_lvl -> { x : netnode | l r x = true }.
-Admitted.
 
 (* On suppose que chaque node appartient à au moins une région du plan de rang minimum (A1) *)
 Theorem no_single_node :
@@ -51,7 +45,7 @@ Inductive has_path (g:graph) : nat -> netnode -> netnode -> Prop :=
 
 Check distance_regions_elem.
 
-Definition is_in_A0 (r1 r2:region)(m: listlist region): bool := 
+Definition region_in_A0 (r1 r2:region)(m: listlist region): bool := 
 match distance_regions_elem r1 r2 m with
 | None => false
 | Some d => d <? k
@@ -63,12 +57,55 @@ Definition getAn (l:loc_geo)(x:netnode)(n:nat) : region.
     exact (region_at_rank r n).
 Qed.
 
-Inductive route (l:loc_geo)(m: listlist region)(x:netnode): Set :=
-(* l'ensemble des noeuds du réseau situés dans A0 par rapport à x *)
-| rA0: forall (gw:netnode) (HP: is_in_A0 (getAn l x max_lvl) (getAn l gw max_lvl) m = true), route l m x 
-(* l'ensemble des régions voisines de la region élémentaire contenant x *)
-| rAn: forall (r:region)(HP: is_in_list (voisins_mat m (getAn l x max_lvl)) r = true), route l m x. 
+Definition netnode_in_A0 (x y:netnode)(l:loc_geo)(m: listlist region): bool := 
+region_in_A0 (getAn l x max_lvl) (getAn l y max_lvl) m.
 
+Definition min_reg_to_dest (src dest:netnode)(l:loc_geo)(m:listlist region): region :=
+match (voisins_mat m (getAn l src max_lvl)) with
+| nil => Z
+| h::t => (fix sub (d minR:region)(l:clist region)(m:listlist region)(min:nat): region :=
+            match l with 
+            | nil => minR
+            | h::t => if (min <=? option_elim min (distance_regions_elem h d m)) then 
+                        sub d minR t m min
+                      else 
+                        sub d h t m (option_elim min (distance_regions_elem h d m))
+            end) (getAn l dest max_lvl) h t m (option_elim 0 (distance_regions_elem h (getAn l dest max_lvl) m))
+end.
+
+(*
+Inductive route : Type :=
+| rA0: netnode -> netnode -> route
+| rAn: netnode -> region -> route.
+
+Definition table (x:netnode)(l:loc_geo)(m: listlist region): clist netnode.
+
+Inductive table2 (x:netnode)(l:loc_geo)(m: listlist region): Set :=
+(* l'ensemble des noeuds du réseau situés dans A0 par rapport à x *)
+| tA0 (gw:netnode)(HP: netnode_in_A0 x gw l m = true): table2 x l m
+(* l'ensemble des régions voisines de la region élémentaire contenant x *)
+| tAn (r:region)(HP: is_in_list (voisins_mat m (getAn l x max_lvl)) r = true): table2 x l m.
+*)
+
+(* Definition rAn: netnode -> region -> netnode . *)
+
+(* Inductive route : Type :=
+| rA0: netnode -> netnode -> route
+| rAn: netnode -> region -> route.
+
+Definition table : Type := clist route. *)
+
+(* Theoreme nécessaire pour determiner si une region un noeud ou non *)
+Theorem region_can_be_empty(x:netnode)(r:region)(l:loc_geo)(m:listlist region): 
+est_voisin (getAn l x max_lvl) r m = true ->
+exists (gw:netnode), l r gw = true \/ 
+forall (gw:netnode), l r gw = false.
+Admitted. (* Litteralement Vrai || Faux *)
+
+
+(* Definition nexthop (src dest:netnode)(l:loc_geo)(m: listlist region)(g:graph): netnode.
+case (netnode_in_A0 src dest l m). exact dest.
+else (min_voisins_to_dest src dest l m). *)
 
 
 (*
@@ -95,7 +132,8 @@ Definition test_loc (r:region) (x:netnode) :  :=
 Eval compute in getAn test_loc test_x 1.
 *)
 
-(* TODO: Modéliser une route *)
+(* TODO: Prouver la propriété:
+         Il n'existe pas de boucle réseau. => utiliser les variations de distances vers la destination  *)
 (* TODO: Prouver la propriété: 
          s'il existe un chemin partant d'une source S vers une destination D donnee,
          il existe toujours des valeurs de k et de max_lvl qui permettent de trouver la 
@@ -103,31 +141,3 @@ Eval compute in getAn test_loc test_x 1.
 
 
 End network.
-
-
-
-
-
-
-(**
-Definition netgraph (x y:nat):bool:=
-(Nat.eqb y (x+1) || Nat.eqb y (x-1)).
-
-
-
-Structure M2 : Type := {c00 : region;  c01 : region;
-c10 : region;  c11 : region}.
-
-Definition Id2 : M2 := Build_M2 1 0 0 1.
-
-
-
-
-Definition negb (b:bool) : bool := 
-  match b with
-  | true => false
-  | false => true
-  end.
-
-Notation "! x" := (negb x) (at level 50, left associativity) : bool_scope.
-**)
