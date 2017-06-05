@@ -19,9 +19,9 @@ Les matrices de régions permettent de représenter le partitionnement du plan d
 
 ## Contenu de la documentation
 
-* __Memoire_stage__ : Un descriptif de la modélisation du réseau et du principe des fonctions developpées dans le code.
+* __Memoire__ : Un descriptif de la modélisation du réseau et du principe des fonctions developpées dans le code.
 
-* __Support_oral__ : Un support pour la présentation orale du projet.
+* __Soutenance__ : Un support pour la présentation orale du projet.
 
 ## Dates et conditions de rendu
 
