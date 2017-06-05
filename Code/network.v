@@ -73,6 +73,10 @@ match (voisins_mat m (getAn l src max_lvl)) with
             end) (getAn l dest max_lvl) h t m (option_elim 0 (distance_regions_elem h (getAn l dest max_lvl) m))
 end.
 
+
+(* NON TERMINE *)
+
+
 (*
 Inductive route : Type :=
 | rA0: netnode -> netnode -> route
@@ -85,17 +89,13 @@ Inductive table2 (x:netnode)(l:loc_geo)(m: listlist region): Set :=
 | tA0 (gw:netnode)(HP: netnode_in_A0 x gw l m = true): table2 x l m
 (* l'ensemble des régions voisines de la region élémentaire contenant x *)
 | tAn (r:region)(HP: is_in_list (voisins_mat m (getAn l x max_lvl)) r = true): table2 x l m.
+
+Definition table3 : Type := clist route.
 *)
 
 (* Definition rAn: netnode -> region -> netnode . *)
 
-(* Inductive route : Type :=
-| rA0: netnode -> netnode -> route
-| rAn: netnode -> region -> route.
-
-Definition table : Type := clist route. *)
-
-(* Theoreme nécessaire pour determiner si une region un noeud ou non *)
+(* Theoreme nécessaire pour determiner si une region contient un noeud ou non *)
 Theorem region_can_be_empty(x:netnode)(r:region)(l:loc_geo)(m:listlist region): 
 est_voisin (getAn l x max_lvl) r m = true ->
 exists (gw:netnode), l r gw = true \/ 
