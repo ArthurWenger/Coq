@@ -193,6 +193,26 @@ match
 ) l n n
 
 *)
+
+(* en partant de 0 *)
+Fixpoint slice {A:Type}(l:list A)(m n:nat) : list A :=
+match l, m, n with
+| nil, _, _ => nil 
+| h::t, _, O => h :: nil
+| h::t, O, S n' => h :: slice t m n'
+| h::t, S m', S n' => slice t m' n' 
+end.
+
+(* en partant de 1 *)
+Fixpoint slice_bis {A:Type}(l:list A)(m n:nat) : list A :=
+match l, m, n with
+| nil, _, _ => nil 
+| _, _, O => nil
+| h::t, O, S n' => h :: slice_bis t m n'
+| h::t, S O, S n' => h :: slice_bis t O n'
+| h::t, S m', S n' => slice_bis t m' n' 
+end.
+
 End list_prob.
 
 Open Scope string_scope.
@@ -211,6 +231,8 @@ Eval compute in dupli ["a","b","b","c","d"].
 Eval compute in dupli_nth ["a","b","c"] 3. *)
 Eval compute in drop ["a","b","c","a","b","c","a","b","c"] 3.
 Eval compute in drop_bis ["a","b","c","a","b","c","a","b","c"] 3.
+Eval compute in slice ["a","b","c","d", "e", "f"] 3 5.
+Eval compute in slice_bis ["a","b","c","d", "e", "f"] 3 5.
 
 
 
