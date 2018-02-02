@@ -194,6 +194,13 @@ match
 
 *)
 
+Fixpoint split {A : Type} (l : list A) (n : nat) : (list A) * (list A) :=
+  match l, n with
+    | [], _ => ([], [])
+    | h::t, S n' => let t' := split t n' in (h::(fst t'), snd t')
+    | _, O => (nil, l)
+end.
+
 (* en partant de 0 *)
 Fixpoint slice {A:Type}(l:list A)(m n:nat) : list A :=
 match l, m, n with
@@ -212,6 +219,24 @@ match l, m, n with
 | h::t, S O, S n' => h :: slice_bis t O n'
 | h::t, S m', S n' => slice_bis t m' n' 
 end.
+
+Fixpoint rotate {A:Type}(l:list A)(n:nat) : list A :=
+let lth := List.length l in 
+let modn := Nat.modulo n lth in
+let (l1, l2) := split l modn in
+l2 ++ l1.
+
+(* sans split *)
+Fixpoint rotate_bis {A:Type}(l:list A)(n:nat) : list A :=
+let lth := List.length l in 
+let modn := Nat.modulo n lth in
+(fix sub (l s:list A)(n:nat) : list A :=
+match l, n with
+| nil, _ => nil 
+| _, O => l ++ s
+| h::t, S n' => sub t (s ++ [h]) n'
+end) l nil modn.
+
 
 End list_prob.
 
@@ -233,6 +258,8 @@ Eval compute in drop ["a","b","c","a","b","c","a","b","c"] 3.
 Eval compute in drop_bis ["a","b","c","a","b","c","a","b","c"] 3.
 Eval compute in slice ["a","b","c","d", "e", "f"] 3 5.
 Eval compute in slice_bis ["a","b","c","d", "e", "f"] 3 5.
+Eval compute in rotate ["a","b","c","d", "e", "f"] 4.
+Eval compute in split ["a","b","c","d", "e", "f"] 4.
 
 
 
