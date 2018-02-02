@@ -257,6 +257,12 @@ match l, n with
 | h::t, S n' => h :: remove_kth_bis t n'
 end.
 
+(* en partant de 1 *)
+Fixpoint insert_at {A:Type}(e:A)(l:list A)(n:nat) : list A :=
+match l, n with
+| nil, _ | _, O | _, S O => e :: l
+| h::t, S n' => h:: insert_at e t n'
+end.
 
 End list_prob.
 
@@ -282,6 +288,7 @@ Eval compute in rotate ["a","b","c","d", "e", "f"] 4. *)
 Eval compute in split ["a","b","c","d", "e", "f"] 4.
 Eval compute in remove_kth ["a","b","c","d", "e", "f"] 2.
 Eval compute in remove_kth_bis ["a","b","c","d", "e", "f"] 2.
+Eval compute in insert_at "c" ["a","b","d"] 2.
 
 
 
