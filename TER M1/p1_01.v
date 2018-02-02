@@ -178,6 +178,8 @@ match l, cpt with
 | h :: t, S n' => h :: sub t n n'
 end) l pn pn.
 
+Locate split.
+
 (*
 Fixpoint drop {A:Type}(l:list A)(n:nat) : list A :=
 match l with
@@ -197,7 +199,7 @@ match
 Fixpoint split {A : Type} (l : list A) (n : nat) : (list A) * (list A) :=
   match l, n with
     | [], _ => ([], [])
-    | h::t, S n' => let t' := split t n' in (h::(fst t'), snd t')
+    | h::t, S n' => let (l1, l2) := split t n' in (h::l1, l2)
     | _, O => (nil, l)
 end.
 
@@ -237,6 +239,24 @@ match l, n with
 | h::t, S n' => sub t (s ++ [h]) n'
 end) l nil modn.
 
+(* en conservant l'element supprimé et en partant de 1 *)
+Fixpoint remove_kth {A:Type}(l:list A)(n:nat) : (option) * (list A) :=
+match l, n with
+| nil, _ => (None, nil)
+| h::t, O => (Some h, t)
+| h::t, S O => (Some h, t)
+| h::t, S n' => let (elm, ls) := remove_kth t n' in (elm, h :: ls)
+end.
+
+(* en gardant seulement la liste et en partant de 1 *)
+Fixpoint remove_kth_bis {A:Type}(l:list A)(n:nat) : list A :=
+match l, n with
+| nil, _ => nil
+| h::t, O => t
+| h::t, S O => t
+| h::t, S n' => h :: remove_kth_bis t n'
+end.
+
 
 End list_prob.
 
@@ -253,13 +273,15 @@ Eval compute in is_palindrome nat PeanoNat.Nat.eq_dec [2,3,3,2].
 Eval compute in compress nat PeanoNat.Nat.eq_dec [2,3,3,2,2,1,1,1].
 Eval compute in compress_bis nat PeanoNat.Nat.eq_dec [2,3,3,2,2,1,1,1].
 Eval compute in dupli ["a","b","b","c","d"].
-Eval compute in dupli_nth ["a","b","c"] 3. *)
+Eval compute in dupli_nth ["a","b","c"] 3. 
 Eval compute in drop ["a","b","c","a","b","c","a","b","c"] 3.
 Eval compute in drop_bis ["a","b","c","a","b","c","a","b","c"] 3.
 Eval compute in slice ["a","b","c","d", "e", "f"] 3 5.
 Eval compute in slice_bis ["a","b","c","d", "e", "f"] 3 5.
-Eval compute in rotate ["a","b","c","d", "e", "f"] 4.
+Eval compute in rotate ["a","b","c","d", "e", "f"] 4. *)
 Eval compute in split ["a","b","c","d", "e", "f"] 4.
+Eval compute in remove_kth ["a","b","c","d", "e", "f"] 2.
+Eval compute in remove_kth_bis ["a","b","c","d", "e", "f"] 2.
 
 
 
