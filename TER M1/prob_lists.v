@@ -261,8 +261,61 @@ end.
 Fixpoint insert_at {A:Type}(e:A)(l:list A)(n:nat) : list A :=
 match l, n with
 | nil, _ | _, O | _, S O => e :: l
-| h::t, S n' => h:: insert_at e t n'
+| h::t, S n' => h :: insert_at e t n'
 end.
+
+Fixpoint range (a b:nat) : list nat :=
+let diff := b - a in 
+(fix sub (b diff:nat) : list nat :=
+match diff with
+| O => [b]
+| S d' => (b-diff) :: sub b d'
+end) b diff.
+
+Fixpoint range_bis (a b:nat) : list nat :=
+if Arith.Compare_dec.le_lt_dec a b then  
+match b with
+| O => [O]
+| S b' => (range a b') ++ [b]
+end
+else nil.
+
+(* ex 1.28 *)
+Inductive listlist (A:Type) : Type :=
+  | lnil : listlist A
+  | lcons : list A -> listlist A -> listlist A.
+
+Implicit Arguments lnil [A].
+Implicit Arguments lcons [A].
+
+Fixpoint lcount {A:Type}(l:listlist A): nat :=
+match l with
+| lnil => 0
+| lcons _ l' => 1 + lcount l'
+end.
+
+Notation "'{ }" := lnil.
+Notation "'{ x , .. , y }" := (lcons x .. (lcons y lnil) ..).
+
+Fixpoint sub_lsort {A:Type} (l:list A)(m:listlist A)(length:nat) : listlist A :=
+match m with
+| lnil => lcons l lnil
+| lcons h t => if Arith.Compare_dec.le_lt_dec length (List.length h) then 
+               lcons l m
+               else lcons h (sub_lsort l t length)
+end. 
+
+Eval compute in sub_lsort [1,2,2] '{[1],[1,2,3,4]} 3.
+
+
+Fixpoint lsort {A:Type}(l:listlist A) : listlist A :=
+(fix sub (m res:listlist A) : listlist A :=
+match m with
+| lnil => res
+| lcons h t => sub t (sub_lsort h res (List.length h))
+end) l lnil.
+
+Eval compute in lsort '{[1],[1,2,3,4],[1,2],[1,4,5]}.
 
 End list_prob.
 
@@ -289,6 +342,7 @@ Eval compute in split ["a","b","c","d", "e", "f"] 4.
 Eval compute in remove_kth ["a","b","c","d", "e", "f"] 2.
 Eval compute in remove_kth_bis ["a","b","c","d", "e", "f"] 2.
 Eval compute in insert_at "c" ["a","b","d"] 2.
+Eval compute in range_bis 5 8.
 
 
 
