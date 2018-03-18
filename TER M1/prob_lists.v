@@ -94,11 +94,29 @@ Theorem element_at_bis_append {A:Type}: forall (l:list A) (x:A),
   Qed.
 
 (* 1.04 Find the number of elements of a list. *) 
-Fixpoint card_list {A:Type}(l:list A): nat :=
+Fixpoint length2 {A:Type}(l:list A): nat :=
     match l with
     | nil => O
-    | x :: y => S (card_list y)
+    | _ :: y => S (length2 y)
     end.
+
+Theorem length2_append {A:Type}: forall (l1 l2:list A),
+    length2 l1 + length2 l2 = length2 (l1 ++ l2).
+  Proof.
+    intros l1 l2.
+    induction l1.
+    - (* length l2 = length l2 *) reflexivity.
+    - simpl. rewrite IHl1. reflexivity.
+  Qed.
+
+Theorem length2_eq_length {A:Type}: forall (l:list A),
+  length2 l = length l.
+Proof.
+  intro l.
+  induction l.
+  - (* 0=0 *) reflexivity.
+  - simpl. rewrite IHl. reflexivity.
+Qed.
 
 (* 1.05 Reverse a list. *) 
 Fixpoint rev_list {A:Type}(l:list A): list A :=
@@ -115,8 +133,58 @@ Fixpoint rev_list_bis {A:Type}(l:list A): list A :=
     | x :: y =>  sub y (x :: l')
     end) l nil.
 
+Theorem rev_list_append {A:Type}: forall (l:list A)(x:A), 
+rev_list (l++[x]) = x::(rev_list l).
+Proof.
+    intros l x.
+    induction l.
+    - reflexivity.
+    - simpl. rewrite IHl. reflexivity.    
+Qed.
+
+Theorem rev_cons {A:Type}: forall (l:list A)(x:A), 
+rev_list (x::l) = (rev_list l)++[x].
+Proof.
+    intros l x.
+    case l.
+    - reflexivity.
+    - simpl. reflexivity.    
+Qed.
+
+Theorem rev_list_involutive {A:Type}: forall (l:list A), 
+    rev_list (rev_list l) = l.
+Proof.
+    intro l.
+    induction l. 
+    - reflexivity.
+    - simpl. rewrite rev_list_append. rewrite IHl. reflexivity.    
+Qed.
+
+Theorem rev_eq_rev_list {A:Type}: forall (l:list A), 
+    rev_list l = rev l.
+Proof.
+    intro l.
+    induction l.
+    - reflexivity.
+    - simpl. rewrite IHl. reflexivity.    
+Qed.
+
 (* 1.06 Find out whether a list is a palindrome. *) 
+Section A_dec.
+Variable A:Type. (* on crée une variable pour pouvoir indiquer que A doit être décidable *)
 Hypothesis A_dec : forall x y:A, {x = y} + {x <> y}.
+
+Theorem not_x_x: forall (x:A), x <> x -> false = true.
+Proof.
+    intros. pose (Bool.absurd_eq_true) as X. apply X. apply H. apply (eq_refl x).
+Qed.
+
+Theorem not_x_x_bis: forall (x:A)(P:Prop), x <> x -> P.
+Proof.
+    intros.
+    apply not_x_x in H. discriminate.
+Qed.
+
 
 Fixpoint equal_lists (l l':list A): bool :=
 match l, l' with
@@ -128,11 +196,349 @@ match l, l' with
 | _, _ => false 
 end.
 
+Theorem equal_lists_l_l: forall (l:list A), equal_lists l l = true .
+Proof.
+    intro l. induction l. 
+    - reflexivity. 
+    - simpl. case (A_dec a a). 
+        * intro h. apply IHl.
+        * apply not_x_x.
+Qed.
+
 Definition is_palindrome (l:list A): bool :=
     equal_lists l (rev_list l).
 
+(* Alternativement on peut définir un type inductif *)
+Inductive palindrome : list A -> Prop :=
+|Empty : palindrome nil
+|Single : forall n, palindrome [n]
+|Rcons : forall (n : A)(l : list A), palindrome l -> palindrome (n :: l ++ [n]).
+
+Theorem is_palindrome_nil: is_palindrome [] = true.
+Proof.
+    unfold is_palindrome.
+    simpl. reflexivity.
+Qed.
+
+Theorem equal_lists_cons: forall (x:A)(l l':list A), 
+    equal_lists (x::l) (x::l') = equal_lists l l'.
+Proof.
+    intros. destruct (A_dec x x).
+    - simpl. destruct (A_dec x x).
+        * reflexivity.
+        * absurd (x=x). apply n. apply e.
+    -  pose (Bool.absurd_eq_bool) as X. apply X. apply n. apply (eq_refl x). 
+Qed.
+
+Lemma nil_cons (x:A)(l:list A)
+: not (nil=cons x l).
+intro.
+discriminate.
+Qed.
+
+Lemma nil_app (x:A)(l:list A)
+: not (nil= l++[x]).
+destruct l. simpl. discriminate.
+discriminate.
+Qed.
+
+Theorem palindrome_self_rev : forall (l: list A),
+  palindrome (l ++ rev l). 
+Proof.
+  intros. induction l.
+  - simpl. apply Empty. 
+  - simpl. rewrite app_assoc. apply Rcons. apply IHl.
+Qed.
+
+Theorem palindrome_rev: forall (l:list A), palindrome l -> l = rev l.
+  intros. induction H.
+  - reflexivity.
+  - reflexivity.
+  - simpl. rewrite rev_unit. rewrite <- IHpalindrome. reflexivity.
+Qed.
+
+(* ############ Demo l = rev l -> palindrome l ############## *)
+
+Lemma fib_ind :
+ forall P:nat -> Prop,
+   P 0 ->
+   P 1 -> 
+  (forall n:nat, P n -> P (S n) -> P (S (S n))) -> 
+  forall n:nat, P n.
+Proof.
+ intros P H0 H1 HSSn n. cut (P n /\ P (S n)).
+ - intro H. inversion H. apply H2.
+ - induction n.
+    * split.
+        ** apply H0.
+        ** apply H1.
+    * split.
+        ** inversion IHn. apply H2.
+        ** apply HSSn.
+            *** inversion IHn. apply H.
+            *** inversion IHn. apply H2.
+Qed.
+
+Definition lfirst {X} (l: list X) : list X :=
+  match l with
+  | [] => []
+  | x :: l => [x]
+end.
+
+Definition init {X} (l: list X) : list X := rev (tail (rev l)).
+
+Definition llast {X} (l: list X) : list X := rev (lfirst (rev l)).
+
+Theorem app_r_nil : forall X (l: list X),
+  l ++ [] = l.
+Proof. intros. induction l. reflexivity. simpl. rewrite IHl. reflexivity.
+Qed.
+
+Lemma rev_app_rev : forall X (a b:list X),
+  rev a ++ rev b = rev (b ++ a).
+Proof. intros X a. induction a; intros.
+  rewrite app_r_nil. reflexivity.
+  simpl. rewrite <- app_assoc.
+  remember ([a] ++ rev b) as xrb.
+  rewrite <- rev_involutive with X xrb. rewrite IHa.
+  simpl in Heqxrb. rewrite Heqxrb. simpl. 
+  rewrite rev_involutive. rewrite <- app_assoc. simpl. reflexivity.
+Qed.
+
+Theorem rev_bij : forall X (l1 l2: list X),
+  l1 = l2 <-> rev l1 = rev l2.
+Proof. intros. split. intro H. rewrite H. reflexivity.
+  intro H. rewrite <- rev_involutive. rewrite <- rev_involutive at 1.
+  rewrite H. rewrite ? rev_involutive. reflexivity.
+Qed.
+
+
+Theorem first_app_tail : forall X (l: list X),
+  l = lfirst l ++ tail l.
+Proof. intros.
+  destruct l. reflexivity.
+  simpl. reflexivity.
+Qed.
+
+Theorem init_app_last : forall X (l: list X),
+  l = init l ++ llast l.
+Proof. intros.
+  unfold init. unfold llast. rewrite rev_app_rev.
+  rewrite <- rev_involutive at 1. rewrite <- rev_bij.
+  apply first_app_tail.
+Qed.
+
+Theorem snoc_tail_almost_comm : forall X (x: X) (l: list X),
+  l <> [] -> tail (l ++ [x]) = (tail l) ++ [x].
+Proof. intros. destruct l. 
+    - exfalso. apply H. reflexivity. 
+    - reflexivity.
+Qed.
+
+Lemma lfirst_almost_init_inv : forall X (x y: X) (l: list X),
+  lfirst (init (x::y::l)) = lfirst (x::y::l).
+Proof. intros. unfold init. remember (y::l) as yl. simpl.
+  rewrite snoc_tail_almost_comm.
+  rewrite rev_unit. reflexivity.
+  rewrite Heqyl. rewrite rev_bij. rewrite rev_involutive. simpl. 
+  discriminate.
+Qed.
+
+Theorem split_ends : forall X (l: list X) (x y: X),
+ (x::y::l) = lfirst (x::y::l) ++ tail (init (x::y::l)) ++ llast (x::y::l).
+Proof. intros.  
+  rewrite init_app_last at 1.
+  rewrite first_app_tail with (l := init (x::y::l)) at 1.
+  rewrite lfirst_almost_init_inv. reflexivity.
+Qed.
+
+Theorem first_single : forall X (x y:X) (l: list X), l <> [] -> exists k, lfirst (l) = [k].
+Proof. intros. induction l. unfold not in H. exfalso. apply H. reflexivity.
+  exists a. reflexivity.
+Qed.
+
+Theorem last_single : forall X (x y:X) (l: list X), l <> [] -> exists k, llast (l) = [k].
+Proof. intros. induction l. unfold not in H.  exfalso. apply H. reflexivity.
+unfold llast. assert (exists z, lfirst (rev (a :: l)) =  [z]).
+  apply first_single. assumption. assumption. rewrite rev_bij. rewrite rev_involutive. simpl. discriminate.
+  inversion H0. rewrite H1. exists x0. reflexivity.
+Qed.
+
+Lemma length_app :
+ forall X (l l':list X), length (l ++ l') = length l + length l'.
+Proof.
+  intros X l; elim l; simpl; auto.
+Qed.
+
+Require Import Arith.
+
+Theorem list_induction : forall X (P : list X -> Prop),
+       P [] -> 
+       (forall (x : X), P [x]) ->
+       (forall (x y : X) (l : list X), P l -> P (x :: l ++ [y])) ->
+       forall l : list X, P l.
+Proof. 
+ intros.
+ cut (forall (n:nat) (l:list X), length l = n -> P l).
+ - (* Case "Proof of assertion" *) intros. eapply H2. reflexivity.
+ - intro n. pattern n. apply fib_ind.
+    * (* Case "length is 0". *) intros. apply length_zero_iff_nil in H2. rewrite H2. apply H.
+    * (* Case "length is 1". *) intros. destruct l0.
+        ** simpl in H2. inversion H2.
+        ** simpl in H2. inversion H2. apply length_zero_iff_nil in H4. rewrite H4. apply H0.
+    * (*  Case "length is S S n". *) intros. destruct l0.
+        ** simpl in H4. inversion H4.
+        ** destruct l0.
+            *** simpl in H4. inversion H4.
+            *** rewrite split_ends. simpl. rewrite split_ends in H4. simpl in H4. inversion H4. 
+                assert(x::x0::l0 <> []).
+                + unfold not. intro contra. inversion contra.
+                + apply last_single in H5.
+                    ++ inversion H5. rewrite H7.  apply H1. apply H2. rewrite H7 in H6. 
+                       rewrite length_app in H6. simpl in H6. rewrite plus_comm in H6. 
+                      inversion H6. reflexivity.
+                    ++ assumption.
+                    ++ assumption.
+Qed.
+
+Theorem app_l_eq : forall X (l1 l2 m: list X), m ++ l1 = m ++ l2 -> l1 = l2.
+Proof. intros. induction m. simpl in H. apply H.
+ inversion H. apply IHm in H1. apply H1.
+Qed.
+
+Theorem app_r_eq : forall X (l1 l2 m: list X), l1 ++ m = l2 ++ m -> l1 = l2.
+Proof. intros. rewrite rev_bij in H. rewrite <- 2? rev_app_rev in H.
+ apply app_l_eq in H. rewrite <- rev_bij in H. apply H.
+Qed. 
+
+Theorem rev_pal : forall (l: list A),
+  l = rev l -> palindrome l.
+intros l. pattern l. apply list_induction; intros. Print palindrome.
+ apply Empty.  apply Single. simpl in H0.
+ rewrite rev_unit in H0.
+ simpl in H0. inversion H0.
+ apply Rcons.
+ apply H.
+ apply app_r_eq in H3. apply H3.
+Qed.
+
+(* ############ Fin Demo l = rev l -> palindrome l ############## *)
+
+(*Lemma palindromic_rev : forall l:list A, palindrome l -> rev_list l = l.
+Proof.
+    intros l H.
+    induction l. reflexivity.
+    simpl. generalize IHl. inversion H. simpl. reflexivity.
+    simpl. intros. rewrite rev_list_append. simpl.
+    elim H. destruct l. discriminate.
+    elim H. reflexivity.
+    reflexivity.
+    intros. simpl. rewrite rev_list_append. simpl.
+
+intros l H. elim H. simpl. auto with datatypes.
+intros a l0 m H0 H1 H2.
+generalize H1; inversion_clear H2.
+simpl; auto.
+rewrite (remove_last_inv H3).
+simpl.
+repeat (rewrite rev_app; simpl).
+intro eg; rewrite eg.
+simpl; auto.
+Qed. *)
+
+
+Theorem equal_lists_append: forall (x:A)(l1 l2:list A), 
+    equal_lists (l1 ++ [x]) (l2 ++ [x]) = equal_lists l1 l2.
+Proof.
+    intros.
+    Admitted.
+
+Theorem is_palindrome_append: forall (l:list A)(x:A),
+    is_palindrome l = is_palindrome (x :: (l ++ [x])).
+Proof.
+    intros l x.
+    unfold is_palindrome.
+    rewrite rev_cons. rewrite rev_list_append. rewrite <- app_comm_cons. 
+    rewrite (equal_lists_cons x). rewrite (equal_lists_append x). reflexivity.
+Qed.
+
+Theorem palindrome_nil: forall (l:list A), l=[] -> palindrome l.
+Proof.
+    intros.
+    subst.
+    constructor.
+Qed.
+
+Theorem cons_app_pal: forall (l:list A)(a:A), 
+    is_palindrome l = true -> is_palindrome (a :: l ++ [a]) = true.
+Proof.
+    intros.
+    induction l.
+    - simpl. unfold is_palindrome. simpl. case (A_dec a a).
+        * reflexivity.
+        * apply not_x_x.
+    - simpl. unfold is_palindrome in *. Admitted.
+
+
+Theorem pal_self_rev : forall (l: list A),
+  is_palindrome (l ++ rev l) = true.
+intros. induction l.
+    - reflexivity.
+    - simpl. assert (P: a :: (l ++ rev l) ++ [a] = a :: l ++ rev l ++ [a]). 
+        * rewrite app_assoc. reflexivity. 
+        * rewrite <- P. apply (cons_app_pal (l ++ rev l) a). apply IHl.
+Qed. 
+
+(* Theorem rev_eq_pal_length: forall (n: nat) (l: list A), 
+    length l <= n -> l = rev l -> palindrome l.
+Proof.
+(* by induction on [n], not [l] *)
+    intros.
+    induction n. 
+    - destruct l as [|a l'].
+        * constructor.
+        * simpl in H. inversion H.
+    - destruct l as [|a l'].
+        * constructor.
+        * inversion H0. destruct (rev l').
+            ** simpl in H2. inversion H2. constructor.
+            ** rewrite H2. induction l.
+                *** simpl. simpl in H2. inversion H2. subst. assert (P:[a0;a0]=a0::[]++[a0]). reflexivity. rewrite P. constructor.
+                *** inversion H2. subst. 
+             subst. simpl in H. inversion H. subst. simpl in IHn.
+Qed. *)
+
+(*    simpl.
+    destruct l.
+    - simpl. case (A_dec x x). 
+        * reflexivity.
+        * intro n. pose (Bool.absurd_eq_true) as X. apply eq_sym. apply X. apply n. apply (eq_refl x).
+    - apply f_equal. simpl.
+
+
+    - intro. destruct l. simpl. apply e. reflexivity. 
+    
+    rewrite <- (equal_lists_eq l (rev_list l)). case (A_dec x x).
+    intro n.
+
+
+
+    induction l.
+    - unfold is_palindrome. simpl. case (A_dec x x). 
+        * reflexivity.
+        * unfold not. intro n. pose (Bool.absurd_eq_true) as X. apply eq_sym. apply X. apply n. apply (eq_refl x).
+    - unfold is_palindrome. rewrite rev_cons. inversion IHl.
+     simpl. case rev_list l ++ [a].
+        
+        
+        apply (not(eq_refl x)). intro t. Print eq_refl. apply (eq_refl x) in t. intro test. rewrite test in t. Print absurd. rewrite test. intro t. 
+        simpl.  Locate "<>". inversion n.   *)
+
 
 (*
+
+
+
 Variable B : Type.
 Variable F : B -> Type.
 
@@ -159,8 +565,10 @@ Eval compute in Hcons 2 (Hcons [3,4] (Hnil)).
 
 TODO: implementer les listes heterogenes *)
 
+
+
+
 (* 1.08 Eliminate consecutive duplicates of list elements. *) 
-(* Utilisation de A_dec *)
 Fixpoint compress (l:list A): list A :=
 match l with
 | nil => nil
@@ -173,8 +581,6 @@ match l with
             end
 end.
 
-
-(* Utilisation de A_dec *)
 Fixpoint compress_bis (l:list A): list A :=
 match l with
 |nil => nil
@@ -188,6 +594,55 @@ match l with
                 end) l h
 end.
 
+Theorem compress_append: forall (x:A)(l:list A), 
+    compress ([x;x] ++ l) = compress (x::l) .
+Proof.
+    intros. simpl. case (A_dec x x).
+    - intro. destruct l.
+        * reflexivity.
+        * reflexivity.
+    - simpl. apply not_x_x_bis. 
+Qed.
+
+Theorem compress_cons: forall (x:A)(l:list A), 
+    compress (x::l) = x::(compress l) \/ compress (x::l) = compress l.
+Proof.
+    intros x l. destruct l.
+    - simpl. left. reflexivity.
+    - simpl. case (A_dec x a).
+        * right. reflexivity.
+        * left. reflexivity.    
+Qed.
+
+(* Theorem compress_cons2: forall (a:A)(l:list A), exists (l':list A), compress (a::l) = a::l'.
+Proof.
+    Admitted.   
+
+Theorem list_neq_cons: forall (a:A)(l:list A), a::l <> l.
+Proof.
+    intros. Admitted.
+
+
+Theorem compress_cons_not: forall (x a:A)(l:list A), 
+    x::compress(a::l) <> compress(a::l).
+Proof.
+    intros. apply list_neq_cons.
+Qed.
+
+Theorem compress_cons_right: forall (x:A)(l:list A), 
+    compress (x::l) = compress l -> exists (a:A)(l':list A), l = a::l' /\ a = x.
+Proof.
+    intros x l.
+    simpl.
+    destruct l as [| a l2]. 
+    - discriminate.
+    - case (A_dec x a).
+        * intros. exists a. exists l2. split. reflexivity. apply eq_sym in e. apply e.
+        * intros e. simpl. destruct l2. 
+            ** discriminate.
+            ** simpl. Admitted. *)
+
+
 (* Fixpoint pack (l:list A):list A. implementer listlist... *)
 
 (* 1.14 Duplicate the elements of a list. *) 
@@ -196,6 +651,39 @@ match l with
 | nil => nil
 | h :: t => h :: h :: dupli t
 end.
+
+Theorem dupli_cons: forall (x:A)(l:list A), dupli (x::l) = [x;x] ++ dupli l.
+Proof.
+    intros x l.
+    eauto.  
+Qed.
+
+Theorem dupli_compress : forall(l:list A), compress (dupli l) = compress l.
+Proof.
+    intro l. induction l.
+    - reflexivity.
+    - rewrite dupli_cons. rewrite compress_append. pose compress_cons as C.
+        elim (C a l). intro H. rewrite <- IHl in H. rewrite H.
+        elim (C a (dupli l)). trivial.
+        intros. rewrite H0. rewrite IHl in H. 
+        pose (list_neq_cons a (compress (dupli l))) as X. unfold not in X. elim X. 
+Admitted.
+  (*    destruct (C a (dupli l)). rewrite H. rewrite IHl. apply eq_sym. destruct (C a l).
+      rewrite H0. reflexivity.
+      simpl.
+      rewrite H0. simpl. 
+      simpl. destruct l. discriminate. 
+        simpl.
+      rewrite <- H0 in IHl. rewrite IHl in H. rewrite H0 in H.
+
+      
+      rewrite H. rewrite H0. rewrite IHl. reflexivity.
+      rewrite H0. rewrite IHl. rewrite H. 
+      rewrite H. rewrite H0. rewrite IHl.
+       split. rewrite (C a l). 
+Qed. *)
+
+End A_dec.
 
 (* 1.15 Duplicate the elements of a list a given number of times. *) 
 Fixpoint dupli_elm {A:Type}(x:A)(n:nat) : list A :=
