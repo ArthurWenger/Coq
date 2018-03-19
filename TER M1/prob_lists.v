@@ -170,7 +170,7 @@ Proof.
 Qed.
 
 (* 1.06 Find out whether a list is a palindrome. *) 
-Section A_dec.
+Section pal_A_dec.
 Variable A:Type. (* on crée une variable pour pouvoir indiquer que A doit être décidable *)
 Hypothesis A_dec : forall x y:A, {x = y} + {x <> y}.
 
@@ -194,6 +194,13 @@ match l, l' with
                       | right _ => false
                       end
 | _, _ => false 
+end.
+
+(* en utilisant list_eq_dec *)
+Fixpoint equal_lists_bis (l l':list A): bool :=
+match list_eq_dec A_dec l l' with
+| left _ => true
+| right _ => false
 end.
 
 Theorem equal_lists_l_l: forall (l:list A), equal_lists l l = true .
@@ -488,6 +495,7 @@ intros. induction l.
         * rewrite app_assoc. reflexivity. 
         * rewrite <- P. apply (cons_app_pal (l ++ rev l) a). apply IHl.
 Qed. 
+End pal_A_dec.
 
 (* Theorem rev_eq_pal_length: forall (n: nat) (l: list A), 
     length l <= n -> l = rev l -> palindrome l.
@@ -566,9 +574,57 @@ Eval compute in Hcons 2 (Hcons [3,4] (Hnil)).
 TODO: implementer les listes heterogenes *)
 
 
+(* 1.07 Flatten a nested list structure. *)
+
+(* probleme pour le cas [1;[1;2];3] => concatenation de listes mais pas d'imbrication *)
+Inductive nlist (A:Type): Type :=
+| n0 : nlist A
+| ucons : A -> nlist A -> nlist A
+| lcons : nlist A -> nlist A -> nlist A.
+
+Implicit Arguments n0 [A].
+Implicit Arguments ucons [A].
+Implicit Arguments lcons [A].
+
+(*
+Notation "x :: l" := (ucons x l)(at level 60, right associativity) : nlist_scope.
+Notation "[ ]" := n0 : nlist_scope.
+Notation "[ x ]" := (ucons x n0) : nlist_scope.
+Notation "[ x ; .. ; y ]" := (ucons x .. (ucons y n0) ..) : nlist_scope.
+Notation "[ x , .. , y , z ]" := (lcons x .. (lcons y z) ..) : nlist_scope. 
+Local Open Scope nlist_scope. *)
+
+Eval compute in lcons (ucons 1 n0) (ucons 1 (ucons 1 n0)).
+Eval compute in ucons 1 (ucons  2 n0).
+Eval compute in lcons (ucons 1  (ucons 2 (ucons 3 n0))) (ucons 1 (ucons 2 n0)).
+ (* Eval compute in lcons [ 1 ; 2 ; 3 ] [1;2].
+Eval compute in lcons [ 1 ; 2 ; 3 ] (lcons [1;2] [1;2;3;4]) . *)
+
+Fixpoint nlength {A:Type} (l:nlist A): nat :=
+match l with
+| n0 => 0
+| ucons h t => S (nlength t)
+| lcons l1 l2 => 2            
+end.
+
+Fixpoint my_flatten {A:Type} (l:nlist A): list A :=
+match l with
+| n0 => nil
+| ucons h t => h :: my_flatten t
+| lcons l1 l2 => my_flatten l1 ++ my_flatten l2            
+end.
+
+Eval compute in my_flatten (lcons (ucons 1  (ucons 2 (ucons 3 n0))) (ucons 1 (ucons 2 n0))).
+(* Eval compute in my_flatten (lcons [ 1 ; 2 ; 3 ] (lcons [1;2] [1;2;3;4])).
+Local Close Scope nlist_scope.
+Local Open Scope list_scope. *)
 
 
 (* 1.08 Eliminate consecutive duplicates of list elements. *) 
+Section compress_A_dec.
+Variable A:Type.
+Hypothesis A_dec : forall x y:A, {x = y} + {x <> y}.
+
 Fixpoint compress (l:list A): list A :=
 match l with
 | nil => nil
@@ -613,6 +669,198 @@ Proof.
         * right. reflexivity.
         * left. reflexivity.    
 Qed.
+End compress_A_dec.
+
+(* 1.09 Pack consecutive duplicates of list elements into sublists. *)
+
+Inductive depth2list (A:Type): Type :=
+| d20 : depth2list A
+| d2lcons : list A -> depth2list A -> depth2list A.
+
+Implicit Arguments d20 [A].
+Implicit Arguments d2lcons [A].
+
+Section pack_A_dec.
+Variable A:Type.
+Hypothesis A_dec : forall x y:A, {x = y} + {x <> y}.
+
+Fixpoint pack (l:list A): depth2list A :=
+match l with
+| nil => d20
+| h :: t => 
+    (fix sub (l:list A) (last:A) (current:list A): depth2list A :=
+        match l with
+        | nil => d2lcons current d20
+        | h :: t => match A_dec h last with
+                    | left _ => sub t h (h :: current)
+                    | right _ => d2lcons current (sub t h [h])
+                    end
+        end) t h [h]
+end.
+
+End pack_A_dec.
+Eval compute in pack nat Nat.eq_dec [1;1;1;2;2;2;3;4;4;4].
+
+(* Fixpoint pack (l:list A): nlist A :=
+match l with
+| nil => n0
+| h :: t => lcons (
+    (fix sub (l:list A) (last:A) (current:nlist A): nlist A :=
+        match l with
+        | nil => n0
+        | h :: t => match A_dec h last with
+                    | left _ => sub t h (ucons h current)
+                    | right _ => lcons current (sub t h n0)
+                    end
+        end) l h (ucons h n0)) n0
+end. *)
+
+
+(* 1.10 Run-length encoding of a list. *)
+Section encode_A_dec.
+Variable A:Type.
+Hypothesis A_dec : forall x y:A, {x = y} + {x <> y}.
+
+Print hd.
+(* Avec option *)
+Fixpoint encode (l:list A): list (nat * option A) :=
+let lpack:=pack A A_dec l in (
+    (fix sub (l:depth2list A): list (nat * option A) :=
+        match l with
+        | d20 => nil
+        | d2lcons l1 l2 => (length l1, hd_error l1) :: (sub l2)
+        end )) lpack.
+
+(* Sans option *)
+Fixpoint encode_bis (l:list A): list (nat * A) :=
+let lpack:=pack A A_dec l in (
+    (fix sub (l:depth2list A): list (nat * A) :=
+        match l with
+        | d20 => nil
+        | d2lcons l1 l2 => match l1 with
+                           | nil => (sub l2)
+                           | h :: t => (length l1, h) :: (sub l2)
+                           end
+        end )) lpack.
+
+End encode_A_dec.        
+Eval compute in pack nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]).
+Eval compute in encode nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]).
+Eval compute in encode_bis nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]).
+
+(* 1.11 Modified run-length encoding. *)
+(* Implementer une liste heterogene *)
+Section hlist.
+Variable iT : Type.
+Variable F : iT -> Type.
+
+Inductive hlist : list iT -> Type :=
+| Hnil : hlist nil
+| Hcons : forall {T Ts}, F T -> hlist Ts -> hlist (T :: Ts).
+
+Definition hlist_hd {T Ts} (h : hlist (T :: Ts)) : F T :=
+match h with
+  | Hcons x _ => x
+  | Hnil => tt
+end.
+
+Definition hlist_tl {T Ts} (h : hlist (T :: Ts)) : hlist Ts :=
+match h with
+  | Hcons _ t => t
+  | Hnil => tt
+end.
+
+Print hlist_tl.
+End hlist.
+
+
+Section encode2_A_dec.
+Variable A:Type.
+Hypothesis A_dec : forall x y:A, {x = y} + {x <> y}.
+
+Inductive dlist (A:Type): Type :=
+| Dn0 : dlist A
+| Dcons : A -> dlist A -> dlist A
+| DLcons : (nat*A) -> dlist A -> dlist A.
+
+Implicit Arguments Dn0 [A].
+Implicit Arguments Dcons [A].
+Implicit Arguments DLcons [A].
+
+Check Dn0.
+Check (Dcons 1 (Dcons 2 Dn0)).
+Check DLcons (2,1) (Dcons 1 (Dcons 2 Dn0)).
+
+
+(* Notation "x :: l" := (Dcons x l)(at level 60, right associativity) : dlist_scope.
+Notation "[ ]" := Dn0 : dlist_scope.
+Notation "[ x ]" := (Dcons x n0) : dlist_scope.
+Notation "[ x ; .. ; y ]" := (Dcons x .. (Dcons y Dn0) ..) : dlist_scope.
+Notation "[ x , .. , y , z ]" := (DLcons x .. (DLcons y z) ..) : dlist_scope. 
+Local Open Scope dlist_scope. *)
+
+
+Fixpoint encode_modified (l:list A): dlist A :=
+match l with
+| nil => Dn0
+| h :: t => 
+    (fix sub (l:list A) (last:A) (count:nat): dlist A :=
+        match l with
+        | nil => if count =? 1 then 
+                    Dcons last Dn0
+                else
+                    DLcons (count, last) Dn0
+        | h :: t => match A_dec h last with
+                    | left _ => sub t h (S count)
+                    | right _ => if count =? 1 then 
+                                    Dcons last (sub t h 1)
+                                 else
+                                    DLcons (count, last) (sub t h 1)
+                    end
+        end) t h 1
+end.
+
+
+
+(* Eval compute in encode_modified nat Nat.eq_dec ([1;1;1;2;3;3;4]). *)
+
+(* 1.12 Decode a run-length encoded list. *)
+Fixpoint decode {A:Type} (l:list (nat * A)): list A :=
+match l with
+| nil => nil
+| (l,r) :: t => (fix dup (x:A)(n:nat): list A :=
+                match n with
+                | O => nil
+                | S n' => x :: dup x n'
+                end) r l ++ decode t
+end.
+
+Eval compute in encode nat Nat.eq_dec [1;1;1;2;2;4;5;5;4].
+Eval compute in decode [(3,1); (2,2); (1,4); (2,5); (1,4)].
+
+
+(* 1.13 Run-length encoding of a list (direct solution). *)
+Fixpoint encode_direct (l:list A): list (nat * A) :=
+match l with
+| nil => nil
+| h :: t => 
+    (fix sub (l:list A) (last:A) (count:nat): list (nat * A) :=
+        match l with
+        | nil => (count, last) :: nil
+        | h :: t => match A_dec h last with
+                    | left _ => sub t h (S count)
+                    | right _ => (count, last) :: (sub t h 1)
+                    end
+        end) t h 1
+end.
+
+Theorem decode_inv_encode: forall(l:list A), decode (encode_direct l) = l.
+Proof.
+    Admitted.
+       
+End encode2_A_dec.
+
+
 
 (* Theorem compress_cons2: forall (a:A)(l:list A), exists (l':list A), compress (a::l) = a::l'.
 Proof.
@@ -652,13 +900,14 @@ match l with
 | h :: t => h :: h :: dupli t
 end.
 
-Theorem dupli_cons: forall (x:A)(l:list A), dupli (x::l) = [x;x] ++ dupli l.
+Theorem dupli_cons {A:Type}: forall (x:A)(l:list A), dupli (x::l) = [x;x] ++ dupli l.
 Proof.
     intros x l.
     eauto.  
 Qed.
 
-Theorem dupli_compress : forall(l:list A), compress (dupli l) = compress l.
+(*
+Theorem dupli_compress {A:Type}: forall(l:list A), compress (dupli l) = compress l.
 Proof.
     intro l. induction l.
     - reflexivity.
@@ -667,7 +916,7 @@ Proof.
         elim (C a (dupli l)). trivial.
         intros. rewrite H0. rewrite IHl in H. 
         pose (list_neq_cons a (compress (dupli l))) as X. unfold not in X. elim X. 
-Admitted.
+Admitted. *)
   (*    destruct (C a (dupli l)). rewrite H. rewrite IHl. apply eq_sym. destruct (C a l).
       rewrite H0. reflexivity.
       simpl.
@@ -682,8 +931,6 @@ Admitted.
       rewrite H. rewrite H0. rewrite IHl.
        split. rewrite (C a l). 
 Qed. *)
-
-End A_dec.
 
 (* 1.15 Duplicate the elements of a list a given number of times. *) 
 Fixpoint dupli_elm {A:Type}(x:A)(n:nat) : list A :=
@@ -790,7 +1037,7 @@ end) l nil modn.
 
 (* 1.20 Remove the K'th element from a list. *) 
 (* en renvoyant un couple et en partant de 1 *)
-Fixpoint remove_kth {A:Type}(l:list A)(n:nat) : (option) * (list A) :=
+Fixpoint remove_kth {A:Type}(l:list A)(n:nat) : (option A) * (list A) :=
 match l, n with
 | nil, _ => (None, nil)
 | h::t, O => (Some h, t)
@@ -818,19 +1065,27 @@ end.
 (* 1.22 Create a list containing all integers within a given range. *) 
 Fixpoint range (a b:nat) : list nat :=
 let diff := b - a in 
-(fix sub (b diff:nat) : list nat :=
-match diff with
-| O => [b]
-| S d' => (b-diff) :: sub b d'
-end) b diff.
+    (fix sub (b diff:nat) : list nat :=
+    match diff with
+    | O => [b]
+    | S d' => (b-diff) :: sub b d'
+    end) b diff.
 
+(* En utilisant le_lt_dec := {n <= m} + {m < n} *)
 Fixpoint range_bis (a b:nat) : list nat :=
 if Arith.Compare_dec.le_lt_dec a b then  
-match b with
-| O => [O]
-| S b' => (range a b') ++ [b]
-end
+    match b with
+    | O => [O]
+    | S b' => (range a b') ++ [b]
+    end
 else nil.
+
+(* 1.23 Extract a given number of randomly selected elements from a list. *)
+(* utiliser seed pour générer des nombres aléatoires ? *)
+Require Import Streams.
+CoFixpoint rand (seed n1 n2 : nat) : Stream nat :=
+    let seed' := Nat.modulo seed n2 in Cons seed' (rand (seed' * n1) n1 n2).
+
 
 (* 1.28 Sorting a list of lists according to length of sublists  *) 
 Inductive listlist (A:Type) : Type :=
