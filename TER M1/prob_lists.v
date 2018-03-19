@@ -672,28 +672,20 @@ Qed.
 End compress_A_dec.
 
 (* 1.09 Pack consecutive duplicates of list elements into sublists. *)
-
-Inductive depth2list (A:Type): Type :=
-| d20 : depth2list A
-| d2lcons : list A -> depth2list A -> depth2list A.
-
-Implicit Arguments d20 [A].
-Implicit Arguments d2lcons [A].
-
 Section pack_A_dec.
 Variable A:Type.
 Hypothesis A_dec : forall x y:A, {x = y} + {x <> y}.
 
-Fixpoint pack (l:list A): depth2list A :=
+Fixpoint pack (l:list A): list (list A) :=
 match l with
-| nil => d20
+| nil => nil
 | h :: t => 
-    (fix sub (l:list A) (last:A) (current:list A): depth2list A :=
+    (fix sub (l:list A) (last:A) (current:list A): list (list A) :=
         match l with
-        | nil => d2lcons current d20
+        | nil => [current]
         | h :: t => match A_dec h last with
                     | left _ => sub t h (h :: current)
-                    | right _ => d2lcons current (sub t h [h])
+                    | right _ => [current] ++ (sub t h [h])
                     end
         end) t h [h]
 end.
@@ -725,19 +717,19 @@ Print hd.
 (* Avec option *)
 Fixpoint encode (l:list A): list (nat * option A) :=
 let lpack:=pack A A_dec l in (
-    (fix sub (l:depth2list A): list (nat * option A) :=
+    (fix sub (l:list (list A)): list (nat * option A) :=
         match l with
-        | d20 => nil
-        | d2lcons l1 l2 => (length l1, hd_error l1) :: (sub l2)
+        | nil => nil
+        | l1 :: l2 => (length l1, hd_error l1) :: (sub l2)
         end )) lpack.
 
 (* Sans option *)
 Fixpoint encode_bis (l:list A): list (nat * A) :=
 let lpack:=pack A A_dec l in (
-    (fix sub (l:depth2list A): list (nat * A) :=
+    (fix sub (l:list (list A)): list (nat * A) :=
         match l with
-        | d20 => nil
-        | d2lcons l1 l2 => match l1 with
+        | nil => nil
+        | l1 :: l2 => match l1 with
                            | nil => (sub l2)
                            | h :: t => (length l1, h) :: (sub l2)
                            end
@@ -1086,50 +1078,101 @@ Require Import Streams.
 CoFixpoint rand (seed n1 n2 : nat) : Stream nat :=
     let seed' := Nat.modulo seed n2 in Cons seed' (rand (seed' * n1) n1 n2).
 
+(* 1.24 Lotto: Draw N different random numbers from the set 1..M. *)
 
-(* 1.28 Sorting a list of lists according to length of sublists  *) 
-Inductive listlist (A:Type) : Type :=
-  | lnil : listlist A
-  | lcons : list A -> listlist A -> listlist A.
+(* 1.25 Generate a random permutation of the elements of a list. *)
 
-Implicit Arguments lnil [A].
-Implicit Arguments lcons [A].
+(* 1.26 Generate the combinations of K distinct objects chosen from the N elements of a list *)
+Fixpoint combination {A:Type} (n:nat) (l:list A) : list (list A) :=
+(fix sub (n:nat) (l rem:list A): list (list A) := 
+match n, l with
+| O, _ => [rem]
+| _, nil => [nil]
+| S n', h::t => if n <=? length t  then 
+                    (sub n' t (h::rem)) ++ (sub n t rem)
+                else 
+                    (sub n' t (h::rem))
+end) n l nil.
 
-Fixpoint lcount {A:Type}(l:listlist A): nat :=
-match l with
-| lnil => 0
-| lcons _ l' => 1 + lcount l'
-end.
+Eval compute in combination 2 [1;2;3;4].
+Eval compute in combination 3 [1;2;3;4].
 
-Notation "'{ }" := lnil.
-Notation "'{ x , .. , y }" := (lcons x .. (lcons y lnil) ..).
+Theorem card_combination {A:Type}: forall (l:list A)(n:nat), let cardl := length l in 
+    (length (combination n l) = fact cardl / (fact n * fact (cardl - n))).
+Proof.
+    Admitted.   
+Print prod.
+(* 1.27 Group the elements of a set into disjoint subsets. *)
+(* renvoie egalement la liste restant pour chaque combinaison *)
+Fixpoint comb_bis {A:Type} (n:nat) (l:list A) : list (list A * list A) :=
+(fix sub (n:nat) (l rem remL:list A): list (list A * list A) := 
+match n, l with
+| O, _ => [(rem, remL++l)]
+| _, nil => [(nil, remL)]
+| S n', h::t => if n <=? length t  then 
+                    (sub n' t (h::rem) remL) ++ (sub n t rem (h::remL))
+                else 
+                    (sub n' t (h::rem) remL)
+end) n l nil nil.
 
-Fixpoint sub_lsort {A:Type} (l:list A)(m:listlist A)(length:nat) : listlist A :=
+Eval compute in comb_bis 3 [1;2;3;4;5].
+
+(* ####### *)
+
+Fixpoint group3 {A:Type} (n m p:nat) (l:list A) : list (list A * list A * list A) :=
+let comb1 := comb_bis n l in ( 
+    match comb1 with
+    | nil => nil
+    | (cn, reml1)::t => let comb2 := comb_bis m reml1 in (
+                        match comb2 with
+                        | nil => nil
+                        | (cm, reml2) => let comb3 := comb_bis p reml2 in (
+                                            match comb2 with
+                                            | nil => nil
+                                            | (cp, _) => (cn, cm, cp))    
+    )
+ )
+(fix sub (n m p:nat) (l remL remM remP:list A): list (list A * list A * list A) := 
+match n, l with
+| O, _ =>  match 
+| _, nil => [(remL, remM, remP)]
+| S n', h::t => if (n+m+p) <=? length t  then 
+                    (sub n' t (h::remL)) ++ (sub n t remL)
+                else 
+                    (sub n' t (h::remL))
+end) n m p l nil nil nil.
+
+(* ############ *)
+(* 1.28 Sorting a list of lists according to length of sublists  *)
+Print Arith.Compare_dec.le_lt_dec.
+(* insertion d'une liste de taille lenL dans une liste de listes de taille variable *)
+Fixpoint sub_lsort {A:Type} (l:list A)(m:list (list A))(lenL:nat) : list (list A) :=
 match m with
-| lnil => lcons l lnil
-| lcons h t => if Arith.Compare_dec.le_lt_dec length (List.length h) then 
-               lcons l m
-               else lcons h (sub_lsort l t length)
+| nil => [l]
+| l1::l2 => if Arith.Compare_dec.le_lt_dec lenL (length l1) then 
+                [l] ++ m
+            else [l1] ++ (sub_lsort l l2 lenL)
 end. 
 
-Eval compute in sub_lsort [1,2,2] '{[1],[1,2,3,4]} 3.
+(* insertion de [1;2;2] dans [[1];[1;2;3;4]] *)
+Eval compute in sub_lsort [1;2;2] [[1];[1;2;3;4]] 3. 
 
-Fixpoint lsort {A:Type}(l:listlist A) : listlist A :=
+Fixpoint lsort {A:Type}(l:list (list A)) : list (list A) :=
 match l with
-| lnil => lnil
-| lcons h t => sub_lsort h (lsort t) (List.length h)
+| nil => nil
+| h::t => sub_lsort h (lsort t) (length h)
 end.
 
-Fixpoint lsort_bis {A:Type}(l:listlist A) : listlist A :=
-(fix sub (m res:listlist A) : listlist A :=
+Fixpoint lsort_bis {A:Type}(l:list (list A)) : list (list A) :=
+(fix sub (m res:list (list A)) : list (list A) :=
 match m with
-| lnil => res
-| lcons h t => sub t (sub_lsort h res (List.length h))
-end) l lnil.
+| nil => res
+| h::t => sub t (sub_lsort h res (length h))
+end) l nil.
 
 
-Eval compute in lsort '{[1],[1,2,3,4],[1,2],[1,4,5]}.
-Eval compute in lsort_bis '{[1],[1,2,3,4],[1,2],[1,4,5]}.
+Eval compute in lsort [[1];[1;2;3;4];[1;2];[1;4;5]].
+Eval compute in lsort_bis [[1];[1;2;3;4];[1;2];[1;4;5]].
 
 End list_prob.
 
