@@ -2,11 +2,13 @@
 Require Import option.
 Require Import String.*)
 
+Require Import String.
 Require Import List.
 Import ListNotations.
-Local Open Scope list_scope.
 Require Import Datatypes.
 Require Import Ascii.
+
+Local Open Scope list_scope.
 
 Section list_prob.
 (* Variable A:Type.  a changer / modifier *)
@@ -19,6 +21,11 @@ Fixpoint last {A:Type}(l:list A): option A :=
     | _ :: y => last y
     end. 
 
+Local Open Scope string_scope.
+Example test_last: last ["a";"b";"c";"d"] = Some "d".
+Proof. reflexivity. Qed.
+Close Scope string_scope.
+
 Theorem last_append {A:Type}: forall (x:A) (l:list A), last(l++[x]) = Some x.
 Proof.
     intros x l.
@@ -28,6 +35,7 @@ Proof.
         * (* last [] = Some x impossible *) inversion IHl.
         * reflexivity.
 Qed.
+
 
 Theorem last_rev {A:Type}: forall (x:A) (l:list A), last (List.rev (x::l)) = Some x .
 Proof.
@@ -42,6 +50,11 @@ Fixpoint last_but_one {A:Type}(l:list A): option A :=
     | x :: y :: nil => Some x
     | _ :: y => last_but_one y
     end.
+
+Local Open Scope string_scope.
+Example test_last_but_one: last_but_one ["a";"b";"c";"d"] = Some "c".
+Proof. reflexivity. Qed.
+Close Scope string_scope.
 
 Theorem last_but_one_append {A:Type}: forall (l:list A) (x:A) (y:A),
     last_but_one (l ++ [x;y]) = Some x.
@@ -74,6 +87,14 @@ Fixpoint element_at_bis {A:Type}(l:list A)(n: nat): option A :=
     | S n', _ :: y => element_at_bis y n'
     end.
 
+Local Open Scope string_scope.
+Example test_element_at: element_at ["a";"b";"c";"d"] 3 = Some "d".
+Proof. reflexivity. Qed.
+
+Example test_element_at_bis: element_at_bis ["a";"b";"c";"d"] 3 = Some "c".
+Proof. reflexivity. Qed.
+Close Scope string_scope.
+
 Theorem element_at_bis_0 {A:Type}: forall (l:list A), element_at_bis l 0 = None.
 Proof.
     intro l. 
@@ -99,6 +120,11 @@ Fixpoint length2 {A:Type}(l:list A): nat :=
     | nil => O
     | _ :: y => S (length2 y)
     end.
+
+Local Open Scope string_scope.
+Example test_length2: length2 ["a";"b";"c";"d"] = 4.
+Proof. reflexivity. Qed.
+Close Scope string_scope.
 
 Theorem length2_append {A:Type}: forall (l1 l2:list A),
     length2 l1 + length2 l2 = length2 (l1 ++ l2).
@@ -132,6 +158,14 @@ Fixpoint rev_list_bis {A:Type}(l:list A): list A :=
     | nil => l'
     | x :: y =>  sub y (x :: l')
     end) l nil.
+
+Local Open Scope string_scope.
+Example test_rev_list: rev_list ["a";"b";"c";"d"] = ["d";"c";"b";"a"].
+Proof. reflexivity. Qed.
+
+Example test_rev_list_bis: rev_list_bis ["a";"b";"c";"d"] = ["d";"c";"b";"a"].
+Proof. reflexivity. Qed.
+Close Scope string_scope.
 
 Theorem rev_list_append {A:Type}: forall (l:list A)(x:A), 
 rev_list (l++[x]) = x::(rev_list l).
@@ -220,6 +254,7 @@ Inductive palindrome : list A -> Prop :=
 |Empty : palindrome nil
 |Single : forall n, palindrome [n]
 |Rcons : forall (n : A)(l : list A), palindrome l -> palindrome (n :: l ++ [n]).
+Print is_palindrome.
 
 Theorem is_palindrome_nil: is_palindrome [] = true.
 Proof.
@@ -497,6 +532,9 @@ intros. induction l.
 Qed. 
 End pal_A_dec.
 
+Example test_palindrome: is_palindrome nat PeanoNat.Nat.eq_dec [2;3;3;2] = true.
+Proof. reflexivity. Qed.
+
 (* Theorem rev_eq_pal_length: forall (n: nat) (l: list A), 
     length l <= n -> l = rev l -> palindrome l.
 Proof.
@@ -614,7 +652,10 @@ match l with
 | lcons l1 l2 => my_flatten l1 ++ my_flatten l2            
 end.
 
-Eval compute in my_flatten (lcons (ucons 1  (ucons 2 (ucons 3 n0))) (ucons 1 (ucons 2 n0))).
+Example test_my_flatten: 
+my_flatten (lcons (ucons 1  (ucons 2 (ucons 3 n0))) (ucons 1 (ucons 2 n0))) = [1;2;3;1;2].
+Proof. reflexivity. Qed.
+
 (* Eval compute in my_flatten (lcons [ 1 ; 2 ; 3 ] (lcons [1;2] [1;2;3;4])).
 Local Close Scope nlist_scope.
 Local Open Scope list_scope. *)
@@ -671,6 +712,14 @@ Proof.
 Qed.
 End compress_A_dec.
 
+Example test_compress: 
+compress nat PeanoNat.Nat.eq_dec [2;3;3;2;2;1;1;1] = [2;3;2;1].
+Proof. reflexivity. Qed.
+
+Example test_compress_bis: 
+compress_bis nat PeanoNat.Nat.eq_dec [2;3;3;2;2;1;1;1] = [2;3;2;1].
+Proof. reflexivity. Qed.
+
 (* 1.09 Pack consecutive duplicates of list elements into sublists. *)
 Section pack_A_dec.
 Variable A:Type.
@@ -691,7 +740,10 @@ match l with
 end.
 
 End pack_A_dec.
-Eval compute in pack nat Nat.eq_dec [1;1;1;2;2;2;3;4;4;4].
+
+Example test_pack: 
+pack nat Nat.eq_dec [1;1;1;2;2;2;3;4;4;4] = [[1;1;1];[2;2;2];[3];[4;4;4]].
+Proof. reflexivity. Qed.
 
 (* Fixpoint pack (l:list A): nlist A :=
 match l with
@@ -736,9 +788,16 @@ let lpack:=pack A A_dec l in (
         end )) lpack.
 
 End encode_A_dec.        
+
 Eval compute in pack nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]).
-Eval compute in encode nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]).
-Eval compute in encode_bis nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]).
+
+Example test_encode: 
+encode nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]) = [(3, Some 1); (2, Some 2); (1, Some 4); (2, Some 5); (1, Some 4)].
+Proof. reflexivity. Qed.
+
+Example test_encode_bis: 
+encode_bis nat Nat.eq_dec ([1;1;1;2;2;4;5;5;4]) = [(3, 1); (2, 2); (1, 4); (2, 5); (1, 4)].
+Proof. reflexivity. Qed.
 
 (* 1.11 Modified run-length encoding. *)
 (* Implementer une liste heterogene *)
@@ -812,10 +871,6 @@ match l with
         end) t h 1
 end.
 
-
-
-(* Eval compute in encode_modified nat Nat.eq_dec ([1;1;1;2;3;3;4]). *)
-
 (* 1.12 Decode a run-length encoded list. *)
 Fixpoint decode {A:Type} (l:list (nat * A)): list A :=
 match l with
@@ -826,10 +881,6 @@ match l with
                 | S n' => x :: dup x n'
                 end) r l ++ decode t
 end.
-
-Eval compute in encode nat Nat.eq_dec [1;1;1;2;2;4;5;5;4].
-Eval compute in decode [(3,1); (2,2); (1,4); (2,5); (1,4)].
-
 
 (* 1.13 Run-length encoding of a list (direct solution). *)
 Fixpoint encode_direct (l:list A): list (nat * A) :=
@@ -852,7 +903,17 @@ Proof.
        
 End encode2_A_dec.
 
+Eval compute in encode nat Nat.eq_dec [1;1;1;2;2;4;5;5;4].
 
+Example test_encode_modified: 
+encode_modified nat Nat.eq_dec ([1;1;1;2;3;3;4]) = 
+DLcons nat (3, 1) (Dcons nat 2 (DLcons nat (2, 3) (Dcons nat 4 (Dn0 nat)))).
+Proof. reflexivity. Qed.
+
+Example test_decode: 
+decode [(3,1); (2,2); (1,4); (2,5); (1,4)] = 
+[1; 1; 1; 2; 2; 4; 5; 5; 4].
+Proof. reflexivity. Qed.
 
 (* Theorem compress_cons2: forall (a:A)(l:list A), exists (l':list A), compress (a::l) = a::l'.
 Proof.
@@ -891,6 +952,14 @@ match l with
 | nil => nil
 | h :: t => h :: h :: dupli t
 end.
+
+Eval compute in dupli ["a";"b";"b";"c";"d"]%string.
+
+Local Open Scope string_scope.
+Example test_dupli: 
+dupli ["a";"b";"b";"c";"d"] = ["a";"a";"b";"b";"b";"b";"c";"c";"d";"d"].
+Proof. reflexivity. Qed.
+Close Scope string_scope. 
 
 Theorem dupli_cons {A:Type}: forall (x:A)(l:list A), dupli (x::l) = [x;x] ++ dupli l.
 Proof.
@@ -937,6 +1006,12 @@ match l with
 | h :: t => (dupli_elm h n) ++ (dupli_nth t n)
 end.
 
+Local Open Scope string_scope.
+Example test_dupli_nth: 
+dupli_nth ["a";"b";"c"] 3 = ["a"; "a"; "a"; "b"; "b"; "b"; "c"; "c"; "c"].
+Proof. reflexivity. Qed.
+Close Scope string_scope. 
+
 (* 1.16 Drop every N'th element from a list. *) 
 Fixpoint scroll_drop_list {A:Type}(l:list A)(n:nat) : list A :=
 match n, l with
@@ -964,6 +1039,19 @@ match l, cpt with
 | h :: t, S n' => h :: sub t n n'
 end) l pn pn.
 
+
+Local Open Scope string_scope.
+Example test_drop: 
+drop ["a";"b";"c";"a";"b";"c";"a";"b";"c"] 3 = 
+["a"; "b"; "c"; "b"; "c"; "a"; "c"].
+Proof. reflexivity. Qed.
+
+Example test_drop_bis: 
+drop_bis ["a";"b";"c";"a";"b";"c";"a";"b";"c"] 3 = 
+["a"; "b"; "a"; "b"; "a"; "b"].
+Proof. reflexivity. Qed.
+Close Scope string_scope. 
+
 (*
 Fixpoint drop {A:Type}(l:list A)(n:nat) : list A :=
 match l with
@@ -989,6 +1077,11 @@ match l, n with
     | _, O => (nil, l)
 end.
 
+Example test_split: 
+split [1;2;3;4;5;6;7;8;9;10] 4 = ([1;2;3;4],[5;6;7;8;9;10]). 
+Proof. reflexivity. Qed.
+
+
 (* 1.18 Extract a slice from a list. *) 
 (* en partant de 0 *)
 Fixpoint slice {A:Type}(l:list A)(m n:nat) : list A :=
@@ -1009,6 +1102,16 @@ match l, m, n with
 | h::t, S m', S n' => slice_bis t m' n' 
 end.
 
+Local Open Scope string_scope.
+Example test_slice: 
+slice ["a";"b";"c";"d"; "e"; "f"] 3 5 = ["d"; "e"; "f"].
+Proof. reflexivity. Qed.
+
+Example test_slice_bis: 
+slice_bis ["a";"b";"c";"d"; "e"; "f"] 3 5 = ["c"; "d"; "e"].
+Proof. reflexivity. Qed.
+Close Scope string_scope. 
+
 (* 1.19 Rotate a list N places to the left. *) 
 Fixpoint rotate {A:Type}(l:list A)(n:nat) : list A :=
 let lth := List.length l in 
@@ -1026,6 +1129,16 @@ match l, n with
 | _, O => l ++ s
 | h::t, S n' => sub t (s ++ [h]) n'
 end) l nil modn.
+
+Local Open Scope string_scope.
+Example test_rotate: 
+rotate ["a";"b";"c";"d"; "e"; "f"] 4 = ["e"; "f"; "a"; "b"; "c"; "d"].
+Proof. reflexivity. Qed.
+
+Example test_rotate_bis: 
+rotate_bis ["a";"b";"c";"d"; "e"; "f"] 4 = ["e"; "f"; "a"; "b"; "c"; "d"].
+Proof. reflexivity. Qed.
+Close Scope string_scope. 
 
 (* 1.20 Remove the K'th element from a list. *) 
 (* en renvoyant un couple et en partant de 1 *)
@@ -1046,6 +1159,17 @@ match l, n with
 | h::t, S n' => h :: remove_kth_bis t n'
 end.
 
+Local Open Scope string_scope.
+Example test_remove_kth: 
+remove_kth ["a";"b";"c";"d"; "e"; "f"] 2 = (Some "b", ["a"; "c"; "d"; "e"; "f"]).
+Proof. reflexivity. Qed.
+
+Example test_remove_kth_bis: 
+remove_kth_bis ["a";"b";"c";"d"; "e"; "f"] 2 = ["a"; "c"; "d"; "e"; "f"].
+Proof. reflexivity. Qed.
+Close Scope string_scope. 
+
+
 (* 1.21 Insert an element at a given position into a list. *) 
 (* en partant de 1 *)
 Fixpoint insert_at {A:Type}(e:A)(l:list A)(n:nat) : list A :=
@@ -1053,6 +1177,12 @@ match l, n with
 | nil, _ | _, O | _, S O => e :: l
 | h::t, S n' => h :: insert_at e t n'
 end.
+
+Local Open Scope string_scope.
+Example test_insert_at: 
+insert_at "c" ["a";"b";"d"] 2 = ["a"; "c"; "b"; "d"].
+Proof. reflexivity. Qed.
+Close Scope string_scope. 
 
 (* 1.22 Create a list containing all integers within a given range. *) 
 Fixpoint range (a b:nat) : list nat :=
@@ -1071,6 +1201,14 @@ if Arith.Compare_dec.le_lt_dec a b then
     | S b' => (range a b') ++ [b]
     end
 else nil.
+
+Example test_range: 
+range 5 8 = [5; 6; 7; 8].
+Proof. reflexivity. Qed.
+
+Example test_range_bis: 
+range_bis 5 8 = [5; 6; 7; 8].
+Proof. reflexivity. Qed.
 
 (* 1.23 Extract a given number of randomly selected elements from a list. *)
 (* utiliser seed pour générer des nombres aléatoires ? *)
@@ -1094,8 +1232,13 @@ match n, l with
                     (sub n' t (h::rem))
 end) n l nil.
 
-Eval compute in combination 2 [1;2;3;4].
-Eval compute in combination 3 [1;2;3;4].
+Example test_combination: 
+combination 2 [1;2;3;4] = [[2; 1]; [3; 1]; [4; 1]; [3; 2]; [4; 2]; [4; 3]].
+Proof. reflexivity. Qed.
+
+Example test_combination2: 
+combination 3 [1;2;3;4] = [[3; 2; 1]; [4; 2; 1]; [4; 3; 1]; [4; 3; 2]].
+Proof. reflexivity. Qed.
 
 Theorem card_combination {A:Type}: forall (l:list A)(n:nat), let cardl := length l in 
     (length (combination n l) = fact cardl / (fact n * fact (cardl - n))).
@@ -1119,7 +1262,7 @@ Eval compute in comb_bis 3 [1;2;3;4;5].
 
 (* ####### *)
 
-Fixpoint group3 {A:Type} (n m p:nat) (l:list A) : list (list A * list A * list A) :=
+(* Fixpoint group3 {A:Type} (n m p:nat) (l:list A) : list (list A * list A * list A) :=
 let comb1 := comb_bis n l in ( 
     match comb1 with
     | nil => nil
@@ -1140,7 +1283,7 @@ match n, l with
                     (sub n' t (h::remL)) ++ (sub n t remL)
                 else 
                     (sub n' t (h::remL))
-end) n m p l nil nil nil.
+end) n m p l nil nil nil. *)
 
 (* ############ *)
 (* 1.28 Sorting a list of lists according to length of sublists  *)
@@ -1155,7 +1298,9 @@ match m with
 end. 
 
 (* insertion de [1;2;2] dans [[1];[1;2;3;4]] *)
-Eval compute in sub_lsort [1;2;2] [[1];[1;2;3;4]] 3. 
+Example test_sub_lsort: 
+sub_lsort [1;2;2] [[1];[1;2;3;4]] 3 = [[1]; [1; 2; 2]; [1; 2; 3; 4]].
+Proof. reflexivity. Qed.
 
 Fixpoint lsort {A:Type}(l:list (list A)) : list (list A) :=
 match l with
@@ -1174,34 +1319,12 @@ end) l nil.
 Eval compute in lsort [[1];[1;2;3;4];[1;2];[1;4;5]].
 Eval compute in lsort_bis [[1];[1;2;3;4];[1;2];[1;4;5]].
 
+Example test_lsort: 
+lsort [[1];[1;2;3;4];[1;2];[1;4;5]] = [[1]; [1; 2]; [1; 4; 5]; [1; 2; 3; 4]].
+Proof. reflexivity. Qed.
+
+Example test_lsort_bis: 
+lsort_bis [[1];[1;2;3;4];[1;2];[1;4;5]] = [[1]; [1; 2]; [1; 4; 5]; [1; 2; 3; 4]].
+Proof. reflexivity. Qed.
+
 End list_prob.
-
-Open Scope string_scope.
-(* Eval compute in last ["a","b","c","d"].
-Eval compute in last_but_one ["a","b","c","d"].
-Eval compute in element_at ["a","b","c","d"] 3.
-Eval compute in element_at_bis ["a","b","c","d"] 1.
-Eval compute in card_list ["a","b","c","d"].
-Eval compute in rev_list ["a","b","c","d"].
-Eval compute in rev_list_bis ["a","b","c","d"].
-Eval compute in is_palindrome string String.string_dec ["a","b","b","a"].
-Eval compute in is_palindrome nat PeanoNat.Nat.eq_dec [2,3,3,2].
-Eval compute in compress nat PeanoNat.Nat.eq_dec [2,3,3,2,2,1,1,1].
-Eval compute in compress_bis nat PeanoNat.Nat.eq_dec [2,3,3,2,2,1,1,1].
-Eval compute in dupli ["a","b","b","c","d"].
-Eval compute in dupli_nth ["a","b","c"] 3. 
-Eval compute in drop ["a","b","c","a","b","c","a","b","c"] 3.
-Eval compute in drop_bis ["a","b","c","a","b","c","a","b","c"] 3.
-Eval compute in slice ["a","b","c","d", "e", "f"] 3 5.
-Eval compute in slice_bis ["a","b","c","d", "e", "f"] 3 5.
-Eval compute in rotate ["a","b","c","d", "e", "f"] 4. *)
-Eval compute in split ["a","b","c","d", "e", "f"] 4.
-Eval compute in remove_kth ["a","b","c","d", "e", "f"] 2.
-Eval compute in remove_kth_bis ["a","b","c","d", "e", "f"] 2.
-Eval compute in insert_at "c" ["a","b","d"] 2.
-Eval compute in range_bis 5 8.
-
-
-
-
-
